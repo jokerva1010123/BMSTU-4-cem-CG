@@ -1,0 +1,70 @@
+//---------------------------------------------------------------------------
+
+#ifndef MainFormH
+#define MainFormH
+//---------------------------------------------------------------------------
+#include <Classes.hpp>
+#include <Controls.hpp>
+#include <StdCtrls.hpp>
+#include <Forms.hpp>
+#include <ExtCtrls.hpp>
+//---------------------------------------------------------------------------
+class TformAlgLine : public TForm
+{
+__published:	// IDE-managed Components
+	TImage *Image1;
+	TRadioGroup *rgrChooseAlg;
+	TGroupBox *gpbStartPoint;
+	TLabel *Label1;
+	TLabel *Label2;
+	TEdit *edtXFrom;
+	TEdit *edtYFrom;
+	TGroupBox *gpbEndPoint;
+	TLabel *Label3;
+	TLabel *Label4;
+	TEdit *edtXTo;
+	TEdit *edtYTo;
+	TButton *btnDrawLine;
+	TCheckBox *chbSetTimer;
+	TLabel *Label5;
+	TLabel *Label6;
+	TLabel *Label7;
+	TLabel *Label8;
+	TLabel *Label9;
+	TLabel *Label10;
+	TButton *btnClearCanvas;
+	TGroupBox *gpbSunTest;
+	TLabel *Label11;
+	TEdit *edtXSun;
+	TLabel *Label12;
+	TEdit *edtYSun;
+	TLabel *Label13;
+	TEdit *edtRSun;
+	TLabel *Label14;
+	TEdit *edtAngleStep;
+	TLabel *Label15;
+	TButton *btnBuildSun;
+	TLabel *Label16;
+	TColorBox *clbLineColor;
+	TLabel *Label17;
+	TColorBox *clbBgndColor;
+	void __fastcall btnDrawLineClick(TObject *Sender);
+	void __fastcall FormCreate(TObject *Sender);
+	void __fastcall btnClearCanvasClick(TObject *Sender);
+	void __fastcall btnBuildSunClick(TObject *Sender);
+	void __fastcall clbBgndColorChange(TObject *Sender);
+	void __fastcall clbLineColorChange(TObject *Sender);
+private:	// User declarations
+public:		// User declarations
+	TColor MyColor[6];
+	void RealLineBresenham(int XStart, int YStart, int XEnd, int YEnd, bool DoLaunchTimer);
+	void IntLineBresenham(int XStart, int YStart, int XEnd, int YEnd, bool DoLaunchTimer);
+	void GradLineBresenham(int XStart, int YStart, int XEnd, int YEnd, bool DoLaunchTimer);
+	void LineCDA(int XStart, int YStart, int XEnd, int YEnd, bool DoLaunchTimer);
+    void LineStd(int XStart, int YStart, int XEnd, int YEnd, bool DoLaunchTimer);
+	__fastcall TformAlgLine(TComponent* Owner);
+};
+//---------------------------------------------------------------------------
+extern PACKAGE TformAlgLine *formAlgLine;
+//---------------------------------------------------------------------------
+#endif

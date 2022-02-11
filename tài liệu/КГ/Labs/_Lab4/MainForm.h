@@ -1,0 +1,78 @@
+//---------------------------------------------------------------------------
+
+#ifndef MainFormH
+#define MainFormH
+//---------------------------------------------------------------------------
+#include <Classes.hpp>
+#include <Controls.hpp>
+#include <StdCtrls.hpp>
+#include <Forms.hpp>
+#include <ExtCtrls.hpp>
+//---------------------------------------------------------------------------
+class TformAlg—ircle : public TForm
+{
+__published:	// IDE-managed Components
+	TImage *Image1;
+	TRadioGroup *rgrChooseAlg;
+	TGroupBox *gpbCenter;
+	TLabel *Label1;
+	TLabel *Label2;
+	TEdit *edtXC;
+	TEdit *edtYC;
+	TGroupBox *gpbEndPoint;
+	TLabel *Label3;
+	TLabel *Label4;
+	TEdit *edtXAxis;
+	TEdit *edtYAxis;
+	TButton *btnDrawEllipse;
+	TCheckBox *chbSetTimer;
+	TLabel *Label5;
+	TLabel *Label6;
+	TLabel *Label7;
+	TLabel *Label8;
+	TLabel *Label9;
+	TLabel *Label10;
+	TButton *btnClearCanvas;
+	TGroupBox *gpbSunTest;
+	TLabel *Label11;
+	TEdit *edtXSun;
+	TLabel *Label12;
+	TEdit *edtYSun;
+	TLabel *Label13;
+	TEdit *edtRSun;
+	TLabel *Label14;
+	TEdit *edtAngleStep;
+	TButton *btnBuildSun;
+	TLabel *Label16;
+	TColorBox *clbLineColor;
+	TLabel *Label17;
+	TColorBox *clbBgndColor;
+	TCheckBox *chbEqAxis;
+	void __fastcall btnDrawEllipseClick(TObject *Sender);
+	void __fastcall FormCreate(TObject *Sender);
+	void __fastcall btnClearCanvasClick(TObject *Sender);
+	void __fastcall btnBuildSunClick(TObject *Sender);
+	void __fastcall clbBgndColorChange(TObject *Sender);
+	void __fastcall clbLineColorChange(TObject *Sender);
+	void __fastcall edtXAxisChange(TObject *Sender);
+	void __fastcall edtYAxisChange(TObject *Sender);
+	void __fastcall chbEqAxisClick(TObject *Sender);
+private:	// User declarations
+public:		// User declarations
+	TColor MyColor[6];
+	void CanonEllipse(int XC, int YC, int A, int B, bool DoLaunchTimer);
+	void ParamEllipse(int XC, int YC, int A, int B, bool DoLaunchTimer);
+	void MidPtEllipse(int XC, int YC, int A, int B, bool DoLaunchTimer);
+	void BresenhamEllipse(int XC, int YC, int A, int B, bool DoLaunchTimer);
+	void StdEllipse(int XC, int YC, int A, int B, bool DoLaunchTimer);
+	void CanonCircle(int XC, int YC, int R, bool DoLaunchTimer);
+	void ParamCircle(int XC, int YC, int R, bool DoLaunchTimer);
+	void MidPtCircle(int XC, int YC, int R, bool DoLaunchTimer);
+	void BresenhamCircle(int XC, int YC, int R, bool DoLaunchTimer);
+	void StdCircle(int XC, int YC, int R, bool DoLaunchTimer);
+	__fastcall TformAlg—ircle(TComponent* Owner);
+};
+//---------------------------------------------------------------------------
+extern PACKAGE TformAlg—ircle *formAlg—ircle;
+//---------------------------------------------------------------------------
+#endif

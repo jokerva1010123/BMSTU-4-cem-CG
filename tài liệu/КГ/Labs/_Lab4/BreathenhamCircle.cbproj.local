@@ -1,0 +1,18 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BorlandProject>
+	<Transactions>
+    <Transaction>1899.12.30 00:00:00.000.066,E:\BARANOV_IU7-41\Types_Structs\Lab03\TickCntr.cpp=</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.601,C:\Users\Вано\Documents\RAD Studio\Projects\Unit2.cpp=E:\BARANOV_IU7-41\Comp_Graphic\Lab03\MainForm.cpp</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.888,=C:\Users\Вано\Documents\RAD Studio\Projects\Unit2.cpp</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.283,=E:\BARANOV_IU7-41\Comp_Graphic\Lab03\TickCntr.cpp</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.636,C:\Users\Вано\Documents\RAD Studio\Projects\Project1.cbproj=E:\BARANOV_IU7-41\Comp_Graphic\Lab03\BreathenhamLine.cbproj</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.323,=E:\BARANOV_IU7-41\Types_Structs\Lab03\TickCntr.cpp</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.601,C:\Users\Вано\Documents\RAD Studio\Projects\Unit2.h=E:\BARANOV_IU7-41\Comp_Graphic\Lab03\MainForm.h</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.387,E:\BARANOV_IU7-41\Comp_Graphic\Lab04\BreathenhamCircle.cbproj=E:\BARANOV_IU7-41\Comp_Graphic\Lab04\BreathenhamLine.cbproj</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.601,C:\Users\Вано\Documents\RAD Studio\Projects\Unit2.dfm=E:\BARANOV_IU7-41\Comp_Graphic\Lab03\MainForm.dfm</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.189,E:\BARANOV_IU7-41\Comp_Graphic\Lab03\Unit1.h=E:\BARANOV_IU7-41\Comp_Graphic\Lab03\Gradient.h</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.331,=E:\BARANOV_IU7-41\Comp_Graphic\Lab03\Unit1.cpp</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.189,E:\BARANOV_IU7-41\Comp_Graphic\Lab03\Unit1.cpp=E:\BARANOV_IU7-41\Comp_Graphic\Lab03\Gradient.cpp</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.672,=C:\Users\Вано\Documents\RAD Studio\Projects\Project1.res</Transaction>
+  </Transactions>
+</BorlandProject>

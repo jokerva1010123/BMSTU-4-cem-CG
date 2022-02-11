@@ -1,0 +1,642 @@
+//---------------------------------------------------------------------------
+
+#include <vcl.h>
+#pragma hdrstop
+
+#include "MainForm.h"
+#include "TickCntr.h"
+#include <Math.hpp>
+#include <math.h>
+#include "Gradient.cpp"
+//---------------------------------------------------------------------------
+#pragma package(smart_init)
+#pragma resource "*.dfm"
+TformAlgСircle *formAlgСircle;
+//---------------------------------------------------------------------------
+__fastcall TformAlgСircle::TformAlgСircle(TComponent* Owner)
+	: TForm(Owner)
+{
+}
+//---------------------------------------------------------------------------
+#define drawpixel(X,Y) Image1->Canvas->Pixels[(X)][(Y)] = Image1->Canvas->Pen->Color
+
+void TformAlgСircle::CanonEllipse(int XC, int YC,
+									int A, int B, bool DoLaunchTimer)
+{
+	unsigned __int64 t;
+
+	if (DoLaunchTimer)
+	{
+		t = tick();
+	}
+
+	// Вырожденные случаи: одна или обе из осей нулевой длины
+	if (A==0 || B==0)
+	{
+		Image1->Canvas->MoveTo(XC-A, YC-B);
+		if (A==0)
+			Image1->Canvas->LineTo(XC, YC+B+1);
+		else
+			Image1->Canvas->LineTo(XC+A+1, YC);
+	}
+	else
+	{
+
+		int X=XC, _X=XC;
+		int Y=YC+B, _Y=YC-B;
+		int X0X=XC+int(double(A)*A/sqrt((double)A*A+(double)B*B)-1e-7);
+
+		while (X<=X0X)
+		{
+			Image1->Canvas->Pixels[X][Y] = Image1->Canvas->Pen->Color;
+			Image1->Canvas->Pixels[_X][Y] = Image1->Canvas->Pen->Color;
+			Image1->Canvas->Pixels[X][_Y] = Image1->Canvas->Pen->Color;
+			Image1->Canvas->Pixels[_X][_Y] = Image1->Canvas->Pen->Color;
+			X++;
+			_X--;
+			Y = YC+int((double)B/A*sqrt(A*A-(X-XC)*(X-XC))+0.5);
+			_Y = 2*YC-Y;
+		}
+
+
+		while (Y>YC)
+		{
+			Image1->Canvas->Pixels[X][Y] = Image1->Canvas->Pen->Color;
+			Image1->Canvas->Pixels[_X][Y] = Image1->Canvas->Pen->Color;
+			Image1->Canvas->Pixels[X][_Y] = Image1->Canvas->Pen->Color;
+			Image1->Canvas->Pixels[_X][_Y] = Image1->Canvas->Pen->Color;
+			Y--;
+			_Y++;
+			X = XC+int((double)A/B*sqrt(B*B-(Y-YC)*(Y-YC))+0.5);
+			_X = 2*XC-X;
+		}
+
+		Image1->Canvas->Pixels[X][Y] = Image1->Canvas->Pen->Color;
+		Image1->Canvas->Pixels[_X][Y] = Image1->Canvas->Pen->Color;
+	}
+
+
+	if (DoLaunchTimer)
+	{
+		t = tick()-t;
+		ShowMessage("Построил эллипс за время "+IntToStr((__int64)t));
+	}
+}
+
+void TformAlgСircle::ParamEllipse(int XC, int YC,
+									int A, int B, bool DoLaunchTimer)
+{
+	unsigned __int64 t;
+
+	if (DoLaunchTimer)
+	{
+		t = tick();
+	}
+
+	if (A==0 || B==0)
+	{
+		Image1->Canvas->MoveTo(XC-A, YC-B);
+		if (A==0)
+			Image1->Canvas->LineTo(XC, YC+B+1);
+		else
+			Image1->Canvas->LineTo(XC+A+1, YC);
+	}
+	else
+	{
+		double fi=0;
+		double dfi=2.0*Min(double(A)/B,double(B)/A)
+		/(3.0*(A+B)-sqrt((3.0*A+B)*(3.0*B+A)));
+							// согласно формуле Рамануджана для длины эллипса
+		int X, Y, _X, _Y;
+
+		while (fi<M_PI_2+dfi/4)
+		{
+			X = int(A*cos(fi)+0.5);
+			Y = int(B*sin(fi)+0.5);
+			Image1->Canvas->Pixels[XC+X][YC+Y] = Image1->Canvas->Pen->Color;
+			Image1->Canvas->Pixels[XC-X][YC+Y] = Image1->Canvas->Pen->Color;
+			Image1->Canvas->Pixels[XC+X][YC-Y] = Image1->Canvas->Pen->Color;
+			Image1->Canvas->Pixels[XC-X][YC-Y] = Image1->Canvas->Pen->Color;
+			fi += dfi;
+		}
+	}
+
+	if (DoLaunchTimer)
+	{
+		t = tick()-t;
+		ShowMessage("Построил эллипс за время "+IntToStr((__int64)t));
+	}
+}
+
+void TformAlgСircle::MidPtEllipse(int XC, int YC,
+									int A, int B, bool DoLaunchTimer)
+{
+	unsigned __int64 t;
+
+	if (DoLaunchTimer)
+	{
+		t = tick();
+	}
+
+	if (A==0 || B==0)
+	{
+		Image1->Canvas->MoveTo(XC-A, YC-B);
+		if (A==0)
+			Image1->Canvas->LineTo(XC, YC+B+1);
+		else
+			Image1->Canvas->LineTo(XC+A+1, YC);
+	}
+	else
+	{
+
+		int x=0;
+		int y=R;
+		int xBord = int(R*sqrt(0.5)+0.5);
+
+		int error = (1-4*R);
+
+		while (x<=xBord)
+		{
+			drawpixel(XC+x, YC+y);
+			drawpixel(XC+x, YC-y);
+			drawpixel(XC-x, YC+y);
+			drawpixel(XC-x, YC-y);
+
+			if (error<=0)
+			{
+				error += (x++*8 +4);
+			}
+			if (error>0)
+			{
+				error -= (y-- -1)*8;
+			}
+		}
+
+		while (y>=0)
+		{
+            drawpixel(XC+y, YC+x);
+		   drawpixel(XC+y, YC-x);
+		   drawpixel(XC-y, YC+x);
+		   drawpixel(XC-y, YC-x);
+        }
+	}
+
+	if (DoLaunchTimer)
+	{
+		t = tick()-t;
+		ShowMessage("Построил эллипс за время "+IntToStr((__int64)t));
+	}
+
+}
+
+void TformAlgСircle::BresenhamEllipse(int XC, int YC,
+									int A, int B, bool DoLaunchTimer)
+{
+	unsigned __int64 t;
+
+	if (DoLaunchTimer)
+	{
+		t = tick();
+	}
+
+	int x = 0;
+	int y = B;
+	int delta = A*(1 - 2 * B);
+	int error;
+	while (y >= 0)
+	{
+		drawpixel(XC + x, YC + y);
+		drawpixel(XC + x, YC - y);
+		drawpixel(XC - x, YC + y);
+		drawpixel(XC - x, YC - y);
+
+		error = 2 * (delta + A*y) - 1;
+		if ((delta < 0) && (error <= 0))
+		{
+			delta += (2*++x*B + 1);
+			continue;
+        }
+
+		error = 2 * (delta - B*x) - 1;
+		if ((delta > 0) && (error > 0))
+		{
+			delta += (1 - 2*--y*A);
+			continue;
+		}
+
+		delta += 2 * (++x*B - --y*A + 1);
+	}
+
+	if (DoLaunchTimer)
+	{
+		t = tick()-t;
+		ShowMessage("Построил окружность за время "+IntToStr((__int64)t));
+	}
+
+}
+
+void TformAlgСircle::StdEllipse(int XC, int YC,
+									int A, int B, bool DoLaunchTimer)
+{
+	unsigned __int64 t;
+
+	if (DoLaunchTimer)
+	{
+		t = tick();
+	}
+
+	Image1->Canvas->Ellipse(XC-A, YC-B, XC+A+1, YC+B+1);
+
+	if (DoLaunchTimer)
+	{
+		t = tick()-t;
+		ShowMessage("Построил эллипс за время "+IntToStr((__int64)t));
+	}
+}
+
+void TformAlgСircle::CanonCircle(int XC, int YC, int R, bool DoLaunchTimer)
+{
+	unsigned __int64 t;
+
+	if (DoLaunchTimer)
+	{
+		t = tick();
+	}
+
+
+	// Вырожденные случаи: одна или обе из осей нулевой длины
+	if (R==0)
+	{
+		Image1->Canvas->Pixels[XC][YC] = Image1->Canvas->Pen->Color;
+	}
+	else
+	{
+
+		int X=0;
+		int Y=R;
+		int X0X=int(R*sqrt(0.5)+0.5);
+
+		//ShowMessage("Заглушка канона, X0X="+IntToStr(X0X));
+
+		while (X<=X0X)
+		{
+
+			drawpixel(XC+X, YC+Y);
+			drawpixel(XC-X, YC+Y);
+			drawpixel(XC+X, YC-Y);
+			drawpixel(XC-X, YC-Y);
+			drawpixel(XC+Y, YC+X);
+			drawpixel(XC-Y, YC+X);
+			drawpixel(XC+Y, YC-X);
+			drawpixel(XC-Y, YC-X);
+			X++;
+			Y = int(sqrt(R*R-X*X)+0.5);
+		}
+	}
+
+
+	if (DoLaunchTimer)
+	{
+		t = tick()-t;
+		ShowMessage("Построил окружность за время "+IntToStr((__int64)t));
+	}
+}
+
+void TformAlgСircle::ParamCircle(int XC, int YC, int R, bool DoLaunchTimer)
+{
+    unsigned __int64 t;
+
+	if (DoLaunchTimer)
+	{
+		t = tick();
+	}
+
+	//ShowMessage("Заглушка параметра");
+
+	if (R==0)
+	{
+		Image1->Canvas->Pixels[XC][YC] = Image1->Canvas->Pen->Color;
+	}
+	else
+	{
+		double fi=0;
+		double dfi=1.0/R;
+		int X, Y;
+
+		while (fi<M_PI_4+dfi/4)
+		{
+			X = int(R*cos(fi)+0.5);
+			Y = int(R*sin(fi)+0.5);
+            drawpixel(XC+X, YC+Y);
+			drawpixel(XC-X, YC+Y);
+			drawpixel(XC+X, YC-Y);
+			drawpixel(XC-X, YC-Y);
+			drawpixel(XC+Y, YC+X);
+			drawpixel(XC-Y, YC+X);
+			drawpixel(XC+Y, YC-X);
+			drawpixel(XC-Y, YC-X);
+			fi += dfi;
+		}
+
+	}
+	if (DoLaunchTimer)
+	{
+		t = tick()-t;
+		ShowMessage("Построил окружность за время "+IntToStr((__int64)t));
+	}
+}
+
+void TformAlgСircle::MidPtCircle(int XC, int YC, int R, bool DoLaunchTimer)
+{
+
+	unsigned __int64 t;
+
+	if (DoLaunchTimer)
+	{
+		t = tick();
+	}
+
+	if (R==0)
+	{
+		drawpixel(XC,YC);
+	}
+	else
+	{
+		int x=0;
+		int y=R;
+		int xBord = int(R*sqrt(0.5)+0.5);
+
+		int error = (1-4*R);
+
+		while (x<=xBord)
+		{
+			drawpixel(XC+x, YC+y);
+			drawpixel(XC+x, YC-y);
+			drawpixel(XC-x, YC+y);
+			drawpixel(XC-x, YC-y);
+			drawpixel(XC+y, YC+x);
+			drawpixel(XC+y, YC-x);
+			drawpixel(XC-y, YC+x);
+			drawpixel(XC-y, YC-x);
+
+			if (error<=0)
+			{
+				error += (x++*8 +4);
+			}
+			if (error>0)
+			{
+				error -= (y-- -1)*8;
+		    }
+		}
+	}
+
+	if (DoLaunchTimer)
+	{
+		t = tick()-t;
+		ShowMessage("Построил окружность за время "+IntToStr((__int64)t));
+	}
+
+}
+
+void TformAlgСircle::BresenhamCircle(int XC, int YC, int R, bool DoLaunchTimer)
+{
+	unsigned __int64 t;
+
+	if (DoLaunchTimer)
+	{
+		t = tick();
+	}
+
+	int x = 0;
+	int y = R;
+	int delta = 1 - 2 * R;
+	int error;
+	while (y >= 0)
+	{
+		drawpixel(XC + x, YC + y);
+		drawpixel(XC + x, YC - y);
+		drawpixel(XC - x, YC + y);
+		drawpixel(XC - x, YC - y);
+
+		error = 2 * (delta + y) - 1;
+		if ((delta < 0) && (error <= 0))
+		{
+			delta += (2 * ++x + 1);
+			continue;
+        }
+
+		error = 2 * (delta - x) - 1;
+		if ((delta > 0) && (error > 0))
+		{
+			delta += (1 - 2 * --y);
+			continue;
+		}
+
+		delta += 2 * (++x - --y + 1);
+	}
+
+	if (DoLaunchTimer)
+	{
+		t = tick()-t;
+		ShowMessage("Построил окружность за время "+IntToStr((__int64)t));
+	}
+
+}
+
+void TformAlgСircle::StdCircle(int XC, int YC, int R, bool DoLaunchTimer)
+{
+	unsigned __int64 t;
+
+	if (DoLaunchTimer)
+	{
+		t = tick();
+	}
+
+	Image1->Canvas->Ellipse(XC-R, YC-R, XC+R+1, YC+R+1);
+
+	if (DoLaunchTimer)
+	{
+		t = tick()-t;
+		ShowMessage("Построил окружность за время "+IntToStr((__int64)t));
+	}
+}
+
+//----------------------------------------------------------------------------
+
+void __fastcall TformAlgСircle::btnDrawEllipseClick(TObject *Sender)
+{
+	unsigned __int64 t;
+
+	int XC, YC, A, B;
+
+	XC = StrToInt(edtXC->Text);
+	YC = StrToInt(edtYC->Text);
+	A = StrToInt(edtXAxis->Text);
+	if (!chbEqAxis->Checked)
+	{
+		B = StrToInt(edtYAxis->Text);
+	}
+
+	if (!chbEqAxis->Checked)
+	{
+		switch (rgrChooseAlg->ItemIndex)
+		{
+			case 4:  // стандартный алгоритм
+				StdEllipse(XC, YC, A, B, chbSetTimer->Checked);
+				break;
+			case 0:  // алгоритм следования каноническому уравнению
+				CanonEllipse(XC, YC, A, B, chbSetTimer->Checked);
+				break;
+			case 1:  // алгоритм следования прараметрическим уравнениям
+				ParamEllipse(XC, YC, A, B, chbSetTimer->Checked);
+				break;
+			case 2:   // алгоритм средней точки
+				MidPtEllipse(XC, YC, A, B, chbSetTimer->Checked);
+				break;
+			case 3:   // алгоритм Брезенхэма
+				BresenhamEllipse(XC, YC, A, B, chbSetTimer->Checked);
+				break;
+		}
+	}
+	else
+	{
+        switch (rgrChooseAlg->ItemIndex)
+		{
+			case 4:  // стандартный алгоритм
+				StdCircle(XC, YC, A, chbSetTimer->Checked);
+				break;
+			case 0:  // алгоритм следования каноническому уравнению
+				CanonCircle(XC, YC, A, chbSetTimer->Checked);
+				break;
+			case 1:  // алгоритм следования прараметрическим уравнениям
+				ParamCircle(XC, YC, A, chbSetTimer->Checked);
+				break;
+			case 2:   // алгоритм средней точки
+				MidPtCircle(XC, YC, A, chbSetTimer->Checked);
+				break;
+			case 3:   // алгоритм Брезенхэма
+				BresenhamCircle(XC, YC, A, chbSetTimer->Checked);
+				break;
+		}
+    }
+
+}
+//---------------------------------------------------------------------------
+void __fastcall TformAlgСircle::FormCreate(TObject *Sender)
+{
+	Image1->Canvas->Pen->Width = 1;
+	Image1->Canvas->Brush->Style = bsSolid;
+	Image1->Canvas->Brush->Color = clWhite;
+	Image1->Canvas->Pen->Color = clBlack;
+	Image1->Canvas->Rectangle(-2,-2,Image1->Width+1, Image1->Height+1);
+	Image1->Canvas->Brush->Style = bsClear;
+}
+//---------------------------------------------------------------------------
+void __fastcall TformAlgСircle::btnClearCanvasClick(TObject *Sender)
+{
+	Image1->Canvas->Brush->Style = bsSolid;
+	Image1->Canvas->Rectangle(-2,-2,Image1->Width+1, Image1->Height+1);
+	Image1->Canvas->Brush->Style = bsClear;
+}
+//---------------------------------------------------------------------------
+void __fastcall TformAlgСircle::btnBuildSunClick(TObject *Sender)
+{
+	int step = StrToInt(edtAngleStep->Text);
+	int dA = StrToInt(edtRSun->Text);
+	int A = StrToInt(edtXSun->Text);
+
+	int B;
+	if (!chbEqAxis->Checked)
+	{
+		B = StrToInt(edtYSun->Text);
+	}
+
+
+	const int XC = Image1->Width>>1;
+	const int YC = Image1->Height>>1;
+
+	if (chbEqAxis->Checked)
+	{
+		do
+		{
+			switch (rgrChooseAlg->ItemIndex)
+			{
+				case 4:  // стандартный алгоритм
+					StdCircle(XC, YC, A, false);
+					break;
+				case 0:  // алгоритм следования каноническому уравнению
+					CanonCircle(XC, YC, A, false);
+					break;
+				case 1:  // алгоритм следования прараметрическим уравнениям
+					ParamCircle(XC, YC, A, false);
+					break;
+				case 2:   // алгоритм средней точки
+					MidPtCircle(XC, YC, A, false);
+					break;
+				case 3:   // алгоритм Брезенхэма
+					BresenhamCircle(XC, YC, A, false);
+					break;
+			}
+			A-=dA;
+			step--;
+		}
+		while (A>=0 && step);
+	}
+	else
+		do
+		{
+			switch (rgrChooseAlg->ItemIndex)
+			{
+				case 4:  // стандартный алгоритм
+					StdEllipse(XC, YC, A, B, false);
+					break;
+				case 0:  // алгоритм следования каноническому уравнению
+					CanonEllipse(XC, YC, A, B, false);
+					break;
+				case 1:  // алгоритм следования прараметрическим уравнениям
+					ParamEllipse(XC, YC, A, B, false);
+					break;
+				case 2:   // алгоритм средней точки
+					MidPtEllipse(XC, YC, A, B, false);
+					break;
+				case 3:   // алгоритм Брезенхэма
+					BresenhamEllipse(XC, YC, A, B, false);
+					break;
+			}
+			A -= dA;
+			B = B*A/(A+dA);
+			step--;
+		}
+		while (A>=0 && step);
+
+}
+//---------------------------------------------------------------------------
+void __fastcall TformAlgСircle::clbBgndColorChange(TObject *Sender)
+{
+	Image1->Canvas->Brush->Color = clbBgndColor->Selected;
+}
+//---------------------------------------------------------------------------
+void __fastcall TformAlgСircle::clbLineColorChange(TObject *Sender)
+{
+	Image1->Canvas->Pen->Color = clbLineColor->Selected;
+}
+//---------------------------------------------------------------------------
+void __fastcall TformAlgСircle::edtXAxisChange(TObject *Sender)
+{
+	//
+}
+//---------------------------------------------------------------------------
+
+void __fastcall TformAlgСircle::edtYAxisChange(TObject *Sender)
+{
+	//
+}
+//---------------------------------------------------------------------------
+
+void __fastcall TformAlgСircle::chbEqAxisClick(TObject *Sender)
+{
+	edtYAxis->Enabled = !chbEqAxis->Checked;
+    edtYSun->Enabled = !chbEqAxis->Checked;
+}
+//---------------------------------------------------------------------------
+
