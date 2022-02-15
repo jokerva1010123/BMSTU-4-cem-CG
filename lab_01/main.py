@@ -5,8 +5,8 @@ from math import *
 
 EPS = 1e-4
 
-def show_info():
-    box.showinfo("Информация", "Сделал Динь Вьет Ань, ИУ7И-44Б")
+def show_info(str):
+    box.showinfo("Информация", str)
     return
 
 def show_error(str):
@@ -95,6 +95,9 @@ def find_6_point(points, circle):
         new_point = [circle[0] * 2 - points[x - 1][0], circle[1] * 2 - points[x - 1][1]]
         return_point.append(new_point)
     return return_point
+    
+def ccw(point1, point2, point3):
+    return (point2[0] - point1[0])*(point3[1] - point1[1]) - (point2[1] - point1[1])*(point3[0] - point1[0])
 
 def cal_square(points):
     sum = 0
@@ -119,14 +122,31 @@ def check_intersect(pointA, pointB, pointC, pointD):
 
 def intersect(pointA, pointB, pointC, pointD):
     common = []
+    flag = 0
     if fabs(distance(pointA, pointB) - distance(pointA, pointC) - distance(pointC, pointB)) < EPS:
         common.append(pointC)
+        flag = 1
     if fabs(distance(pointA, pointB) - distance(pointA, pointD) - distance(pointD, pointB)) < EPS:
         common.append(pointD)
+        flag = 1
     if fabs(distance(pointC, pointD) - distance(pointA, pointC) - distance(pointA, pointD)) < EPS:
         common.append(pointA)
+        flag = 1
     if fabs(distance(pointC, pointD) - distance(pointB, pointC) - distance(pointB, pointD)) < EPS:
         common.append(pointB)
+        flag = 1
+    if flag:
+        return common
+    if fabs((pointA[0] - pointB[0])*(pointC[1] - pointD[1]) - (pointC[0] - pointD[0])*(pointA[1] - pointB[1]))< EPS:
+        return common
+    if not flag:
+        a1 = (pointA[1] - pointB[1]) / (pointA[0] - pointB[0])
+        b1 = pointA[1] - a1 * pointA[0]
+        a2 = (pointC[1] - pointD[1]) / (pointC[0] - pointD[0])
+        b2 = pointC[1] - a2* pointC[0]
+        x = (b2 - b1) / (a1 - a2)
+        y = a1 * x + b1
+        common.append([x, y])
     return common
 
 def find_common(group_point_1, group_point_2):
@@ -143,10 +163,19 @@ def find_common(group_point_1, group_point_2):
         for y in range(len(group_point_2)):
             if check_intersect(group_point_1[x-1], group_point_1[x], group_point_2[y-1], group_point_2[y]):
                 new_point = intersect(group_point_1[x-1], group_point_1[x], group_point_2[y-1], group_point_2[y])
-                print(group_point_1[x-1], group_point_1[x], group_point_2[y-1], group_point_2[y])
                 for point in new_point:
                     common.append(point)
     return common
+
+def cal_common_square(common):
+    for x in range(1, len(common)):
+        if common[x][0] < common[0][0] or (common[x][0] == common[0][0] and common[x][1] < common[0][1]):
+            common[0], common[x] = common[x], common[0]
+    for x in range(1, len(common) - 1):
+        for y in range(x + 1, len(common)):
+            if ccw(common[0], common[x], common[y]) < 0:
+                common[x], common[y] = common[y], common[x]
+    return cal_square(common)
     
 def find_point():
     points = listbox_1.get(0, END)
@@ -172,16 +201,70 @@ def find_point():
     group_point_1 = find_6_point(group_point_1, circle_1)
     group_point_2 = find_6_point(group_point_2, circle_2)
     common = find_common(group_point_1, group_point_2)
-    print(common)
     return group_point_1, group_point_2, circle_1, circle_2, common
 
 def draw(group_point_1, group_point_2, circle_1, circle_2, common):
-    for x in group_point_1:
-        canvas.create_oval(x[0] + 498, x[1]+348, x[0]+502, x[1]+352, fill = "black")
+    canvas.delete("all")
+    points = group_point_1 + group_point_2 + common
+    xmax = xmin = points[0][0]
+    ymax = ymin = points[0][1]
+    for i in range(len(points)):
+        if points[i][0] > xmax:
+            xmax = points[i][0]
+        if points[i][0] < xmin:
+            xmin = points[i][0]
+        if points[i][1] > ymax:
+            ymax = points[i][1]
+        if points[i][1] < ymin:
+            ymin = points[i][1]
+    s_x = (700 - 50)/(xmax - xmin)
+    s_y = (700 - 50)/(ymax - ymin)
+    s_all = min(s_x, s_y)
+    s_x = s_all
+    s_y = s_all
+    o_x = -xmin * s_x + 25
+    o_y = -ymin * s_y + 25
+    for i in range(len(group_point_1)):
+        x = group_point_1[i][0] * s_x + o_x
+        y = 700 - (group_point_1[i][1] * s_y + o_y)
+        x1 = group_point_1[i-1][0] * s_x + o_x
+        y1 = 700 - (group_point_1[i-1][1] * s_y + o_y)
+        canvas.create_oval(x-6,y-6,x+6,y+6,fill='#b3007d')
+        canvas.create_line(x, y, x1, y1, fill = "black")
+    for i in range(len(group_point_2)):
+        x = group_point_2[i][0] * s_x + o_x
+        y = 700 - (group_point_2[i][1] * s_y + o_y)
+        x1 = group_point_2[i-1][0] * s_x + o_x
+        y1 = 700 - (group_point_2[i-1][1] * s_y + o_y)
+        canvas.create_line(x, y, x1, y1, fill = "black")
+        canvas.create_oval(x-6,y-6,x+6,y+6,fill='#42aaff')
+    if len(common) > 3:
+        common_area = cal_common_square(common)
+    common_point = [(point[0] * s_x + o_x, 700 - (point[1] * s_y + o_y)) for point in common]
+    for i in range(len(common)):
+        x = common[i][0] * s_x + o_x
+        y = 700 - (common[i][1] * s_y + o_y)
+        canvas.create_oval(x-6,y-6,x+6,y+6,fill='red')
+
+    x1 = (circle_1[0] - distance(circle_1, group_point_1[0])) * s_x + o_x
+    y1 = (circle_1[1] - distance(circle_1, group_point_1[1])) * s_y + o_y
+    x2 = (circle_1[0] + distance(circle_1, group_point_1[0])) * s_x + o_x
+    y2 = (circle_1[1] + distance(circle_1, group_point_1[1])) * s_y + o_y
+
+    x3 = (circle_2[0] - distance(circle_2, group_point_2[0])) * s_x + o_x
+    y3 = (circle_2[1] - distance(circle_2, group_point_2[1])) * s_y + o_y
+    x4 = (circle_2[0] + distance(circle_2, group_point_2[0])) * s_x + o_x
+    y4 = (circle_2[1] + distance(circle_2, group_point_2[1])) * s_y + o_y
+
+    canvas.create_oval(x1, y1, x2, y2)
+    canvas.create_oval(x3, y3, x4, y4)
+
+    canvas.create_polygon(common_point, fill = 'red', outline = 'black')
+    show_info("Площадь пересечения: " + str(round(common_area, 5)))
 
 def solve():
     group_point_1, group_point_2, circle_1, circle_2, common = find_point()
-    if group_point_1 == []:
+    if group_point_1 == [] or group_point_2 == []:
         return
     draw(group_point_1, group_point_2, circle_1, circle_2, common)
 
@@ -210,7 +293,7 @@ x_change_label.place(x = 380, y = 830)
 y_change_label = Label(window, text = "Y: ", bg = "tomato", font = "Arial 14")
 y_change_label.place(x = 580, y = 830)
 
-canvas = Canvas(window, width=1000, height=700, bg = "white")
+canvas = Canvas(window, width=700, height=700, bg = "white")
 canvas.place(x = 10, y = 100)
 
 canvas_listbox_1 = Canvas(window, bg = "tomato")
@@ -248,8 +331,6 @@ change_button = Button(window, text = "Изменить точку", command = c
 change_button.place(x = 200, y = 830)
 delete_button = Button(window, text = "Удалить точку", command = delete_point)
 delete_button.place(x = 850, y = 830)
-info_button = Button(window, text = "?", command = show_info)
-info_button.place(x = 1350, y = 850)
 exit_button = Button(window, text = "Выход", command = window.destroy)
 exit_button.place(x = 1400, y = 850)
 
