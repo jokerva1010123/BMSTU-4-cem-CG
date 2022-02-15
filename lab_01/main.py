@@ -119,6 +119,14 @@ def check_intersect(pointA, pointB, pointC, pointD):
 
 def intersect(pointA, pointB, pointC, pointD):
     common = []
+    if fabs(distance(pointA, pointB) - distance(pointA, pointC) - distance(pointC, pointB)) < EPS:
+        common.append(pointC)
+    if fabs(distance(pointA, pointB) - distance(pointA, pointD) - distance(pointD, pointB)) < EPS:
+        common.append(pointD)
+    if fabs(distance(pointC, pointD) - distance(pointA, pointC) - distance(pointA, pointD)) < EPS:
+        common.append(pointA)
+    if fabs(distance(pointC, pointD) - distance(pointB, pointC) - distance(pointB, pointD)) < EPS:
+        common.append(pointB)
     return common
 
 def find_common(group_point_1, group_point_2):
