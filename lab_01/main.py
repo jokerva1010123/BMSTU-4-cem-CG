@@ -4,6 +4,10 @@ import tkinter.messagebox as box
 from math import *
 
 EPS = 1e-4
+task = '''Заданы два множества точек на плоскости.
+В каждом множестве найти три равноудалённые друг от друга точки.
+Через эти точки провести окружности. В каждую окружность вписать шестиугольник.
+Найти площадь пересечения двух получивших шестиугольников.'''
 
 def show_info(str):
     box.showinfo("Информация", str)
@@ -217,44 +221,42 @@ def draw(group_point_1, group_point_2, circle_1, circle_2, common):
             ymax = points[i][1]
         if points[i][1] < ymin:
             ymin = points[i][1]
-    s_x = (700 - 50)/(xmax - xmin)
-    s_y = (700 - 50)/(ymax - ymin)
+    s_x = (800 - 50)/(xmax - xmin)
+    s_y = (800 - 50)/(ymax - ymin)
     s_all = min(s_x, s_y)
-    s_x = s_all
-    s_y = s_all
-    o_x = -xmin * s_x + 25
-    o_y = -ymin * s_y + 25
+    o_x = -xmin * s_all + 25
+    o_y = -ymin * s_all + 25
     for i in range(len(group_point_1)):
-        x = group_point_1[i][0] * s_x + o_x
-        y = 700 - (group_point_1[i][1] * s_y + o_y)
-        x1 = group_point_1[i-1][0] * s_x + o_x
-        y1 = 700 - (group_point_1[i-1][1] * s_y + o_y)
+        x = group_point_1[i][0] * s_all + o_x
+        y = 800 - (group_point_1[i][1] * s_all + o_y)
+        x1 = group_point_1[i-1][0] * s_all + o_x
+        y1 = 800 - (group_point_1[i-1][1] * s_all + o_y)
         canvas.create_oval(x-6,y-6,x+6,y+6,fill='#b3007d')
         canvas.create_line(x, y, x1, y1, fill = "black")
     for i in range(len(group_point_2)):
-        x = group_point_2[i][0] * s_x + o_x
-        y = 700 - (group_point_2[i][1] * s_y + o_y)
-        x1 = group_point_2[i-1][0] * s_x + o_x
-        y1 = 700 - (group_point_2[i-1][1] * s_y + o_y)
+        x = group_point_2[i][0] * s_all + o_x
+        y = 800 - (group_point_2[i][1] * s_all + o_y)
+        x1 = group_point_2[i-1][0] * s_all + o_x
+        y1 = 800 - (group_point_2[i-1][1] * s_all + o_y)
         canvas.create_line(x, y, x1, y1, fill = "black")
         canvas.create_oval(x-6,y-6,x+6,y+6,fill='#42aaff')
     if len(common) > 3:
         common_area = cal_common_square(common)
-    common_point = [(point[0] * s_x + o_x, 700 - (point[1] * s_y + o_y)) for point in common]
+    common_point = [(point[0] * s_all + o_x, 800 - (point[1] * s_all + o_y)) for point in common]
     for i in range(len(common)):
-        x = common[i][0] * s_x + o_x
-        y = 700 - (common[i][1] * s_y + o_y)
+        x = common[i][0] * s_all + o_x
+        y = 800 - (common[i][1] * s_all + o_y)
         canvas.create_oval(x-6,y-6,x+6,y+6,fill='red')
 
-    x1 = (circle_1[0] - distance(circle_1, group_point_1[0])) * s_x + o_x
-    y1 = (circle_1[1] - distance(circle_1, group_point_1[1])) * s_y + o_y
-    x2 = (circle_1[0] + distance(circle_1, group_point_1[0])) * s_x + o_x
-    y2 = (circle_1[1] + distance(circle_1, group_point_1[1])) * s_y + o_y
+    x1 = (circle_1[0] - distance(circle_1, group_point_1[0])) * s_all + o_x
+    y1 = (circle_1[1] - distance(circle_1, group_point_1[1])) * s_all + o_y
+    x2 = (circle_1[0] + distance(circle_1, group_point_1[0])) * s_all + o_x
+    y2 = (circle_1[1] + distance(circle_1, group_point_1[1])) * s_all + o_y
 
-    x3 = (circle_2[0] - distance(circle_2, group_point_2[0])) * s_x + o_x
-    y3 = (circle_2[1] - distance(circle_2, group_point_2[1])) * s_y + o_y
-    x4 = (circle_2[0] + distance(circle_2, group_point_2[0])) * s_x + o_x
-    y4 = (circle_2[1] + distance(circle_2, group_point_2[1])) * s_y + o_y
+    x3 = (circle_2[0] - distance(circle_2, group_point_2[0])) * s_all + o_x
+    y3 = (circle_2[1] - distance(circle_2, group_point_2[1])) * s_all + o_y
+    x4 = (circle_2[0] + distance(circle_2, group_point_2[0])) * s_all + o_x
+    y4 = (circle_2[1] + distance(circle_2, group_point_2[1])) * s_all + o_y
 
     canvas.create_oval(x1, y1, x2, y2)
     canvas.create_oval(x3, y3, x4, y4)
@@ -273,33 +275,18 @@ window.geometry("1500x900")
 window['background'] = 'tomato'
 window.title("Lab_01")
 
-task_label = Label(window, text = '''Заданы два множества точек на плоскости.
-В каждом множестве найти три равноудалённые друг от друга точки.
-Через эти точки провести окружности. В каждую окружность вписать шестиугольник.
-Найти площадь пересечения двух получивших шестиугольников.''', background="yellow")
-task_label.place(x = 200, y = 10)
-listbox_label_1 = Label(window, text = "Множество точек 1", width = 20)
-listbox_label_1.place(x = 1200, y = 10)
-listbox_label_2 = Label(window, text = "Множество точек 2", width = 20)
-listbox_label_2.place(x = 1200, y = 350)
-x_label = Label(window, text = "X: ", bg = "tomato", font = "Arial 14")
-x_label.place(x = 1050, y = 680)
-y_label = Label(window, text = "Y: ", bg = "tomato", font = "Arial 14")
-y_label.place(x = 1050, y = 730)
-type_label = Label(window, text = "Множество: ", bg = "tomato", font = "Arial 14")
-type_label.place(x = 1050, y = 780)
-x_change_label = Label(window, text = "X: ", bg = "tomato", font = "Arial 14")
-x_change_label.place(x = 380, y = 830)
-y_change_label = Label(window, text = "Y: ", bg = "tomato", font = "Arial 14")
-y_change_label.place(x = 580, y = 830)
-
-canvas = Canvas(window, width=700, height=700, bg = "white")
-canvas.place(x = 10, y = 100)
+canvas = Canvas(window, width=1000, height=800, bg = "white")
+canvas.place(x = 10, y = 10)
 
 canvas_listbox_1 = Canvas(window, bg = "tomato")
 canvas_listbox_1.place(x = 1100, y = 50)
 canvas_listbox_2 = Canvas(window, bg = "tomato")
 canvas_listbox_2.place(x = 1100, y = 380)
+
+listbox_label_1 = Label(canvas_listbox_1, text = "Множество точек 1", width = 20)
+listbox_label_1.pack(side=TOP, fill=BOTH)
+listbox_label_2 = Label(canvas_listbox_2, text = "Множество точек 2", width = 20)
+listbox_label_2.pack(side=TOP, fill=BOTH)
 
 listbox_1 = Listbox(canvas_listbox_1, selectmode = SINGLE, height = 15, width = 40)
 listbox_1.pack(side = LEFT, fill = BOTH)
@@ -311,14 +298,28 @@ scrollbar_listbox_1.pack(side = RIGHT, fill = BOTH)
 scrollbar_listbox_2 = Scrollbar(canvas_listbox_2)
 scrollbar_listbox_2.pack(side = RIGHT, fill = BOTH)
 
+x_label = Label(window, text = "X: ", bg = "tomato", font = "Arial 14")
+x_label.place(x = 1050, y = 720)
+y_label = Label(window, text = "Y: ", bg = "tomato", font = "Arial 14")
+y_label.place(x = 1050, y = 750)
+
 entry_x = Entry(window)
-entry_x.place(x = 1100, y = 680)
+entry_x.place(x = 1100, y = 720)
 entry_y = Entry(window)
-entry_y.place(x = 1100, y = 730)
+entry_y.place(x = 1100, y = 750)
+
+x_change_label = Label(window, text = "X: ", bg = "tomato", font = "Arial 14")
+x_change_label.place(x = 380, y = 830)
+y_change_label = Label(window, text = "Y: ", bg = "tomato", font = "Arial 14")
+y_change_label.place(x = 580, y = 830)
+
 entry_x_change = Entry(window, width = 15)
 entry_x_change.place(x = 400, y = 830)
 entry_y_change = Entry(window, width = 15)
 entry_y_change.place(x = 600, y = 830)
+
+type_label = Label(window, text = "Множество: ", bg = "tomato", font = "Arial 14")
+type_label.place(x = 1050, y = 780)
 
 type_combobox = ttk.Combobox(window, value = ['1', '2'], state = "readonly")
 type_combobox.place(x = 1200, y = 780)
@@ -331,7 +332,14 @@ change_button = Button(window, text = "Изменить точку", command = c
 change_button.place(x = 200, y = 830)
 delete_button = Button(window, text = "Удалить точку", command = delete_point)
 delete_button.place(x = 850, y = 830)
-exit_button = Button(window, text = "Выход", command = window.destroy)
-exit_button.place(x = 1400, y = 850)
 
+menubar = Menu(window)
+info_menu = Menu(menubar, tearoff = 0)
+info_menu.add_command(label="О авторе", command = lambda: show_info("Динь ВЬет Ань, ИУ7И-44Б"))
+info_menu.add_command(label="О программе", command = lambda: show_info(task))
+menubar.add_cascade(label="Инфор", menu = info_menu)
+exit_menu = Menu(menubar, tearoff = 0)
+menubar.add_command(label = "Выход", command = window.destroy)
+
+window.config(menu = menubar)
 window.mainloop()
