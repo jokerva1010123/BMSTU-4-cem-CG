@@ -1,17 +1,24 @@
 import math
 import warnings
-from tkinter import *
+import tkinter as tk
+
 from tkinter import ttk
 from PIL import Image, ImageTk
 
-class AutoScrollbar(Scrollbar):
+class AutoScrollbar(ttk.Scrollbar):
     """ A scrollbar that hides itself if it's not needed. Works only for grid geometry manager """
     def set(self, lo, hi):
         if float(lo) <= 0.0 and float(hi) >= 1.0:
             self.grid_remove()
         else:
             self.grid()
-            Scrollbar.set(self, lo, hi)
+            ttk.Scrollbar.set(self, lo, hi)
+
+    def pack(self, **kw):
+        raise tk.TclError('Cannot use pack with the widget ' + self.__class__.__name__)
+
+    def place(self, **kw):
+        raise tk.TclError('Cannot use place with the widget ' + self.__class__.__name__)
 
 class CanvasImage:
     """ Display and zoom image """
@@ -23,14 +30,15 @@ class CanvasImage:
         self.__previous_state = 0  # previous state of the keyboard
         self.path = path  # path to the image, should be public for outer classes
         # Create ImageFrame in placeholder widget
-        self.__imframe = Frame(placeholder)  # placeholder of the ImageFrame object
+        self.__imframe = ttk.Frame(placeholder)  # placeholder of the ImageFrame object
         # Vertical and horizontal scrollbars for canvas
         hbar = AutoScrollbar(self.__imframe, orient='horizontal')
         vbar = AutoScrollbar(self.__imframe, orient='vertical')
         hbar.grid(row=1, column=0, sticky='we')
         vbar.grid(row=0, column=1, sticky='ns')
         # Create canvas and bind it with scrollbars. Public for outer classes
-        self.canvas = Canvas(self.__imframe, xscrollcommand=hbar.set, yscrollcommand=vbar.set)
+        self.canvas = tk.Canvas(self.__imframe, highlightthickness=0,
+                                xscrollcommand=hbar.set, yscrollcommand=vbar.set)
         self.canvas.grid(row=0, column=0, sticky='nswe')
         self.canvas.update()  # wait till canvas is created
         hbar.configure(command=self.__scroll_x)  # bind scrollbars to the canvas
@@ -50,7 +58,9 @@ class CanvasImage:
         self.__huge_size = 14000  # define size of the huge image
         self.__band_width = 1024  # width of the tile band
         Image.MAX_IMAGE_PIXELS = 1000000000  # suppress DecompressionBombError for the big image
-        self.__image = Image.open(self.path)  # open image
+        with warnings.catch_warnings():  # suppress DecompressionBombWarning
+            warnings.simplefilter('ignore')
+            self.__image = Image.open(self.path)  # open image, but down't load it
         self.imwidth, self.imheight = self.__image.size  # public for outer classes
         if self.imwidth * self.imheight > self.__huge_size * self.__huge_size and \
            self.__image.tile[0][0] == 'raw':  # only raw images could be tiled
@@ -123,6 +133,14 @@ class CanvasImage:
         self.__imframe.grid(sticky='nswe')  # make frame container sticky
         self.__imframe.rowconfigure(0, weight=1)  # make canvas expandable
         self.__imframe.columnconfigure(0, weight=1)
+
+    def pack(self, **kw):
+        """ Exception: cannot use pack with this widget """
+        raise Exception('Cannot use pack with the widget ' + self.__class__.__name__)
+
+    def place(self, **kw):
+        """ Exception: cannot use place with this widget """
+        raise Exception('Cannot use place with the widget ' + self.__class__.__name__)
 
     # noinspection PyUnusedLocal
     def __scroll_x(self, *args, **kwargs):
@@ -257,12 +275,27 @@ class CanvasImage:
         else:  # image is totally in RAM
             return self.__pyramid[0].crop(bbox)
 
+    def destroy(self):
+        """ ImageFrame destructor """
+        self.__image.close()
+        map(lambda i: i.close, self.__pyramid)  # close all pyramid images
+        del self.__pyramid[:]  # delete pyramid list
+        del self.__pyramid  # delete pyramid variable
+        self.canvas.destroy()
+        self.__imframe.destroy()
+
+class MainWindow(ttk.Frame):
+    """ Main window class """
+    def __init__(self, mainframe, path):
+        """ Initialize the main Frame """
+        ttk.Frame.__init__(self, master=mainframe)
+        self.master.title('Advanced Zoom v3.0')
+        self.master.geometry('800x600')  # size of the main window
+        self.master.rowconfigure(0, weight=1)  # make the CanvasImage widget expandable
+        self.master.columnconfigure(0, weight=1)
+        canvas = CanvasImage(self.master, path)  # create widget
+        canvas.grid(row=0, column=0)  # show widget
+
 filename = './image.png'  
-window = Tk()
-window.title("lab_02")
-window.geometry("800x600")
-window.rowconfigure(0, weight = 1)
-window.columnconfigure(0, weight = 1)
-canvas = CanvasImage(window, filename)
-canvas.grid(row = 0, column = 0)
-window.mainloop()
+app = MainWindow(tk.Tk(), path=filename)
+app.mainloop()
