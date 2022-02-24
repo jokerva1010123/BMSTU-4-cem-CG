@@ -42,9 +42,6 @@ class CanvasImage:
         self.canvas.bind('<MouseWheel>', self.__wheel)  # zoom for Windows and MacOS, but not Linux
         self.canvas.bind('<Button-5>',   self.__wheel)  # zoom for Linux, wheel scroll down
         self.canvas.bind('<Button-4>',   self.__wheel)  # zoom for Linux, wheel scroll up
-        # Handle keystrokes in idle mode, because program slows down on a weak computers,
-        # when too many key stroke events in the same time
-        self.canvas.bind('<Key>', lambda event: self.canvas.after_idle(self.__keystroke, event))
         # Decide if this image huge or not
         self.__huge = False  # huge or not
         self.__huge_size = 14000  # define size of the huge image
@@ -112,10 +109,6 @@ class CanvasImage:
             j += 1
         print('\r' + 30*' ' + '\r', end='')  # hide printed string
         return image
-
-    def redraw_figures(self):
-        """ Dummy function to redraw figures in the children classes """
-        pass
 
     def grid(self, **kw):
         """ Put CanvasImage widget on the parent widget """
@@ -223,25 +216,7 @@ class CanvasImage:
         #
         self.canvas.scale('all', x, y, scale, scale)  # rescale all objects
         # Redraw some figures before showing image on the screen
-        self.redraw_figures()  # method for child classes
         self.__show_image()
-
-    def __keystroke(self, event):
-        """ Scrolling with the keyboard.
-            Independent from the language of the keyboard, CapsLock, <Ctrl>+<key>, etc. """
-        if event.state - self.__previous_state == 4:  # means that the Control key is pressed
-            pass  # do nothing if Control key is pressed
-        else:
-            self.__previous_state = event.state  # remember the last keystroke state
-            # Up, Down, Left, Right keystrokes
-            if event.keycode in [68, 39, 102]:  # scroll right: keys 'D', 'Right' or 'Numpad-6'
-                self.__scroll_x('scroll',  1, 'unit', event=event)
-            elif event.keycode in [65, 37, 100]:  # scroll left: keys 'A', 'Left' or 'Numpad-4'
-                self.__scroll_x('scroll', -1, 'unit', event=event)
-            elif event.keycode in [87, 38, 104]:  # scroll up: keys 'W', 'Up' or 'Numpad-8'
-                self.__scroll_y('scroll', -1, 'unit', event=event)
-            elif event.keycode in [83, 40, 98]:  # scroll down: keys 'S', 'Down' or 'Numpad-2'
-                self.__scroll_y('scroll',  1, 'unit', event=event)
 
     def crop(self, bbox):
         """ Crop rectangle from the image and return it """
