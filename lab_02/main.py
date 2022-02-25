@@ -5,7 +5,7 @@ from tkinter import ttk
 from PIL import Image, ImageTk
 
 class AutoScrollbar(Scrollbar):
-    """ A scrollbar that hides itself if it's not needed. Works only for grid geometry manager """
+    """ A scrollbar that hides itself if it's not needed"""
     def set(self, lo, hi):
         if float(lo) <= 0.0 and float(hi) >= 1.0:
             self.grid_remove()
@@ -17,6 +17,7 @@ class CanvasImage:
     """ Display and zoom image """
     def __init__(self, placeholder, path):
         """ Initialize the ImageFrame """
+        self.anpha = 0
         self.imscale = 1.0  # scale for the canvas image zoom, public for outer classes
         self.delta = 1.3  # zoom magnitude
         self.__filter = Image.ANTIALIAS  # could be: NEAREST, BILINEAR, BICUBIC and ANTIALIAS
@@ -42,6 +43,8 @@ class CanvasImage:
         self.canvas.bind('<MouseWheel>', self.__wheel)  # zoom for Windows and MacOS, but not Linux
         self.canvas.bind('<Button-5>',   self.__wheel)  # zoom for Linux, wheel scroll down
         self.canvas.bind('<Button-4>',   self.__wheel)  # zoom for Linux, wheel scroll up
+        self.canvas.bind('a', self.left)
+        self.canvas.bind('d', self.right)
         # Decide if this image huge or not
         self.__huge = False  # huge or not
         self.__huge_size = 14000  # define size of the huge image
@@ -168,7 +171,7 @@ class CanvasImage:
                 image = self.__pyramid[max(0, self.__curr_img)].crop(  # crop current img from pyramid
                                     (int(x1 / self.__scale), int(y1 / self.__scale),
                                      int(x2 / self.__scale), int(y2 / self.__scale)))
-            #
+            image.rotate(self.anpha)
             imagetk = ImageTk.PhotoImage(image.resize((int(x2 - x1), int(y2 - y1)), self.__filter))
             imageid = self.canvas.create_image(max(box_canvas[0], box_img_int[0]),
                                                max(box_canvas[1], box_img_int[1]),
@@ -216,6 +219,15 @@ class CanvasImage:
         #
         self.canvas.scale('all', x, y, scale, scale)  # rescale all objects
         # Redraw some figures before showing image on the screen
+        self.__show_image()
+
+    def left(self, event):
+        self.anpha += 10
+        print(self.anpha)
+        self.__show_image()
+    
+    def right(self, event):
+        self.anpha -= 10
         self.__show_image()
 
     def crop(self, bbox):
