@@ -231,7 +231,7 @@ def draw(group_point_1, group_point_2, circle_1, circle_2, common):
         y = 800 - (group_point_1[i][1] * s_all + o_y)
         x1 = group_point_1[i-1][0] * s_all + o_x
         y1 = 800 - (group_point_1[i-1][1] * s_all + o_y)
-        canvas.create_oval(x-6,y-6,x+6,y+6,fill='#b3007d')
+        canvas.create_oval(x-6,y-6,x+6,y+6,fill='blue')
         canvas.create_line(x, y, x1, y1, fill = "black")
     for i in range(len(group_point_2)):
         x = group_point_2[i][0] * s_all + o_x
@@ -239,7 +239,7 @@ def draw(group_point_1, group_point_2, circle_1, circle_2, common):
         x1 = group_point_2[i-1][0] * s_all + o_x
         y1 = 800 - (group_point_2[i-1][1] * s_all + o_y)
         canvas.create_line(x, y, x1, y1, fill = "black")
-        canvas.create_oval(x-6,y-6,x+6,y+6,fill='#42aaff')
+        canvas.create_oval(x-6,y-6,x+6,y+6,fill='green')
     if len(common) > 3:
         common_area = cal_common_square(common)
     common_point = [(point[0] * s_all + o_x, 800 - (point[1] * s_all + o_y)) for point in common]
@@ -260,7 +260,8 @@ def draw(group_point_1, group_point_2, circle_1, circle_2, common):
 
     canvas.create_oval(x1, y1, x2, y2)
     canvas.create_oval(x3, y3, x4, y4)
-
+    canvas.create_line(o_x, 0, o_x, 800)
+    canvas.create_line(0, 800 - o_y, 1000, 800 - o_y)
     canvas.create_polygon(common_point, fill = 'red', outline = 'black')
     show_info("Площадь пересечения: " + str(round(common_area, 5)))
 
@@ -269,6 +270,18 @@ def solve():
     if group_point_1 == [] or group_point_2 == []:
         return
     draw(group_point_1, group_point_2, circle_1, circle_2, common)
+
+def delete_all():
+    canvas.delete('all')
+    canvas.create_line(0, 400, 1000, 400)
+    canvas.create_line(500, 0, 500, 800)
+    entry_x.delete(0, 'end')
+    entry_x_change.delete(0, 'end')
+    entry_y.delete(0, 'end')
+    entry_y_change.delete(0, 'end')
+    listbox_1.delete(0, 'end')
+    listbox_2.delete(0, 'end')
+    type_combobox.set('')
 
 window = Tk()
 window.geometry("1500x900")
@@ -287,6 +300,8 @@ frame_left.columnconfigure(0, weight = 1)
 
 canvas = Canvas(frame_left, width=1000, height=800, bg = "white")
 canvas.grid(row=0, column=0)
+canvas.create_line(0, 400, 1000, 400)
+canvas.create_line(500, 0, 500, 800)
 
 frame_button = Frame(frame_left, width = 1000, height= 100, bg = "tomato")
 frame_button.grid(row = 1, column=0)
@@ -297,6 +312,7 @@ frame_button.columnconfigure(3, weight = 1)
 frame_button.columnconfigure(4, weight = 1)
 frame_button.columnconfigure(5, weight = 1)
 frame_button.columnconfigure(6, weight = 1)
+frame_button.columnconfigure(7, weight = 1)
 frame_button.rowconfigure(0, weight = 1)
 
 solve_button = Button(frame_button, text = "Решить", command = solve)
@@ -313,6 +329,8 @@ entry_y_change = Entry(frame_button, width = 20)
 entry_y_change.grid(row =0, column= 5, padx=5)
 delete_button = Button(frame_button, text = "Удалить точку", command = delete_point)
 delete_button.grid(row =0, column= 6, padx=5)
+delete_button = Button(frame_button, text = "Очистить", command = delete_all)
+delete_button.grid(row =0, column= 7, padx=5)
 
 frame_right = Frame(window, width = 450, height = 850, background= "tomato")
 frame_right.grid(row = 0, column = 1, padx=10, pady = 10, sticky="nsew")
