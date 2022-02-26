@@ -37,7 +37,7 @@ def multiplication_matrix(matrix_a, matrix_b):
 def multiplication_vector(vector, matrix):
     vector_res = [0, 0, 0]
 
-    for i in range(3):
+    for i in range(3): 
         temp = 0
         for k in range(3):
             temp += vector[k] * matrix[k][i]
@@ -133,7 +133,7 @@ def float_answer(answer):
 def moving_func(dx, dy):
     matrix_mov = [[1, 0, 0],
                   [0, 1, 0],
-                  [dx, dy, 1]]
+                  [dx, -dy, 1]]
 
     global inverse_matrix
     inverse_matrix = inverse_func(matrix_mov)
@@ -167,14 +167,13 @@ def rotation():
         return
 
     # print("angle = ", angle, "Xm = ", xm, "Ym = ", ym)
-
-    dx = -xm
-    dy = -ym
+    dx = -xm-400
+    dy = ym-400
     # dx = -list_point[len(list_point) - 1][0]
     # dy = -list_point[len(list_point) - 1][1]
 
     # Переводим в радианы.
-    angle *= pi / 180
+    angle *= -pi / 180
     matrix = [[cos(angle), sin(angle), 0],
               [-sin(angle), cos(angle), 0],
               [0, 0, 1]]
@@ -182,7 +181,7 @@ def rotation():
     matrix_mov = [[1, 0, 0],
                   [0, 1, 0],
                   [dx, dy, 1]]
-
+    
     matrix_res = multiplication_matrix(matrix_mov, matrix)
     matrix_mov[2][0], matrix_mov[2][1] = -dx, -dy
     matrix_res = multiplication_matrix(matrix_res, matrix_mov)
@@ -258,10 +257,10 @@ def scale():
 
     matrix_mov = [[1, 0, 0],
                   [0, 1, 0],
-                  [xm, ym, 1]]
+                  [-400-xm, ym-400, 1]]
 
     matrix_res = multiplication_matrix(matrix_mov, matrix)
-    matrix_mov[2][0], matrix_mov[2][1] = -xm, -ym
+    matrix_mov[2][0], matrix_mov[2][1] = xm + 400, 400-ym
     matrix_res = multiplication_matrix(matrix_res, matrix_mov)
 
     global inverse_matrix
@@ -286,7 +285,7 @@ def cancel():
 
 def paint_point(cordinate):
     r = 1
-    t = 235
+    t = 0
     x = cordinate[0]
     y = cordinate[1] + t
     canv.create_oval(x - r, y - r,
@@ -294,7 +293,7 @@ def paint_point(cordinate):
 
 
 def paint_line(a, b):
-    t = 235
+    t = 0
     canv.create_line(a[0], (a[1] + t), b[0],
                      b[1] + t, fill="black", width=3)
 
@@ -304,51 +303,46 @@ def print_scene():
     canv.create_line(win_size/2, win_size, win_size/2, 0, width=2, arrow=LAST)
     canv.create_line(0, win_size / 2, win_size,
                      win_size / 2, width=2, arrow=LAST)
-    for i in range(len(list_point)):
+    for i in range(25):
         paint_point(list_point[i])
-        paint_line(list_point[i-1], list_point[i])
-    '''for i in range(len(list_point) - 2 - 8):
+        paint_line(list_point[i+1], list_point[i])
+    for i in range(25, len(list_point)):
         paint_point(list_point[i])
-        paint_line(list_point[i], list_point[i + 1])
-    paint_point(list_point[len(list_point) - 1 - 8])
-
-    paint_line(list_point[len(list_point) - 8],
-               list_point[len(list_point) - 7])
-    paint_line(list_point[len(list_point) - 6],
-               list_point[len(list_point) - 5])
-
-    paint_line(list_point[len(list_point) - 4],
-               list_point[len(list_point) - 3])
-    paint_line(list_point[len(list_point) - 2],
-               list_point[len(list_point) - 1])'''
-
+        if i<len(list_point)-1:
+            paint_line(list_point[i+1], list_point[i])
 
 def create_scene():
-    list_point.append([135, 288])
-    list_point.append([80, 244])
-    list_point.append([147, 192])
-    list_point.append([295, 162])
-    list_point.append([270,140])
-    list_point.append([221,140])
-    list_point.append([221,133])
-    list_point.append([18,133])
-    list_point.append([18,125])
-    list_point.append([221,125])
-    list_point.append([221,118])
-    list_point.append([270,118])
-    list_point.append([400, 74])
-    list_point.append([430, 47])
-    list_point.append([480, 47])
-    list_point.append([499, 59])
-    list_point.append([523, 59])
-    list_point.append([627, 103])
-    list_point.append([627, 148])
-    list_point.append([529, 148])
-    list_point.append([529, 160])
-    list_point.append([683, 160])
-    list_point.append([763, 288])
-    list_point.append([615, 280])
-    list_point.append([246, 280])
+    list_point.append([135, 523, 1])
+    list_point.append([80, 479, 1])
+    list_point.append([147, 427, 1])
+    list_point.append([295, 397, 1])
+    list_point.append([270,375, 1])
+    list_point.append([221,375, 1])
+    list_point.append([221,368, 1])
+    list_point.append([18,368, 1])
+    list_point.append([18,360, 1])
+    list_point.append([221,360, 1])
+    list_point.append([221,353, 1])
+    list_point.append([270,353, 1])
+    list_point.append([400, 309, 1])
+    list_point.append([430, 282, 1])
+    list_point.append([480, 282, 1])
+    list_point.append([499, 294, 1])
+    list_point.append([523, 294, 1])
+    list_point.append([627, 338, 1])
+    list_point.append([627, 383, 1])
+    list_point.append([529, 383, 1])
+    list_point.append([529, 395, 1])
+    list_point.append([683, 395, 1])
+    list_point.append([763, 523, 1])
+    list_point.append([615, 515, 1])
+    list_point.append([246, 515, 1])
+    list_point.append([135, 523, 1])
+    list_point.append([141, 560,1])
+    list_point.append([227, 627, 1])
+    list_point.append([646, 627, 1])
+    list_point.append([763, 523, 1])
+    
     print_scene()
 
 
