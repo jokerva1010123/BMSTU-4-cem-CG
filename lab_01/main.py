@@ -4,11 +4,11 @@ import tkinter.messagebox as box
 from math import *
 
 EPS = 1e-4
-task = '''Заданы два множества точек на плоскости.
-В каждом множестве найти три равноудалённые друг от друга точки.
+task = '''Заданы два множества точек на плоскости(-15 <= x <= 15),
+(-10 <= y <= 10).В каждом множестве найти три равноудалённые друг от друга точки.
 Через эти точки провести окружности. В каждую окружность вписать шестиугольник.
 Найти площадь пересечения двух получивших шестиугольников.'''
-
+            
 def show_info(str):
     box.showinfo("Информация", str)
     return
@@ -16,6 +16,11 @@ def show_info(str):
 def show_error(str):
     box.showerror("Error", str)
     return
+
+def draw_point(point, str):
+    x = point[0] * 40 + 600
+    y = 400 - point[1] * 40
+    canvas.create_oval(x-4, y - 4, x + 4, y + 4, fill = str)
 
 def add_point():
     try:
@@ -25,17 +30,24 @@ def add_point():
     except:
         show_error("Проверьте координаты точки и множество")
         return
+    x = round(x, 3)
+    y = round(y, 3)
+    if fabs(x) > 15:
+        show_error("x нужно в [-15;15]")
+        return
+    if fabs(y) > 10:
+        show_error("y нужно в [-10;10]")
+        return
     if type == 1:
         listbox_1.insert(END, "{};{}".format(x, y))
+        draw_point([x, y], "blue")
     else:
         listbox_2.insert(END, "{};{}".format(x, y))
+        draw_point([x, y], "green")
     listbox_1.config(yscrollcommand = scrollbar_listbox_1.set)
     scrollbar_listbox_1.config(command = listbox_1.yview)
     listbox_2.config(yscrollcommand = scrollbar_listbox_2.set)
     scrollbar_listbox_2.config(command = listbox_2.yview)
-    '''entry_x.delete(0, END)
-    entry_y.delete(0, END)
-    type_combobox.set(value = '')'''
 
 def delete_point():
     point_1 = listbox_1.curselection()
@@ -55,6 +67,12 @@ def change_point():
     except:
         show_error("Проверьте координаты новой точки")
         return
+    if fabs(x_new) > 15:
+        show_error("x нужно в интревале [-15;15]")
+        return
+    if fabs(y_new) > 10:
+        show_error("y нужно в интревале [-10;10]")
+        return
     point_1 = listbox_1.curselection()
     point_2 = listbox_2.curselection()
     if point_1 == () and point_2 == ():
@@ -66,6 +84,42 @@ def change_point():
     if point_2 != ():
         listbox_2.delete(point_2[0])
         listbox_2.insert(point_2[0], "{};{}".format(x_new, y_new))
+
+def add_click_1(event):
+    if str(event.widget) != '.!frame.!canvas':
+        return
+    canvas.create_oval(event.x - 4, event.y-4, event.x+4, event.y + 4, fill = "blue")
+    x = round((event.x - 600) / 40, 3)
+    y = round((400 - event.y) / 40, 3)
+    listbox_1.insert(END, "{};{}".format(x, y))
+    listbox_1.config(yscrollcommand = scrollbar_listbox_1.set)
+    scrollbar_listbox_1.config(command = listbox_1.yview)
+
+def add_click_2(event):
+    if str(event.widget) != '.!frame.!canvas':
+        return
+    canvas.create_oval(event.x - 4, event.y-4, event.x+4, event.y + 4, fill = 'green')
+    x = round((event.x - 600) / 40, 3)
+    y = round((400 - event.y) / 40, 3)
+    listbox_2.insert(END, "{};{}".format(x, y))
+    listbox_2.config(yscrollcommand = scrollbar_listbox_2.set)
+    scrollbar_listbox_2.config(command = listbox_2.yview)
+
+def delete_all():
+    canvas.delete('all')
+    canvas.create_line(0, 400, 1200, 400, arrow = "last", width = 3)
+    canvas.create_line(600, 0, 600, 800, arrow = "first", width = 3)
+    for i in range(20):
+        canvas.create_line(0, i * 40, 1200, i * 40)
+    for i in range(30):
+        canvas.create_line(i * 40, 0, i * 40, 800)
+    entry_x.delete(0, 'end')
+    entry_x_change.delete(0, 'end')
+    entry_y.delete(0, 'end')
+    entry_y_change.delete(0, 'end')
+    listbox_1.delete(0, 'end')
+    listbox_2.delete(0, 'end')
+    type_combobox.set('')
 
 def distance(pointA, pointB):
     return sqrt((pointA[0] - pointB[0]) * (pointA[0] - pointB[0]) + (pointA[1] - pointB[1]) * (pointA[1] - pointB[1]))
@@ -181,17 +235,7 @@ def cal_common_square(common):
                 common[x], common[y] = common[y], common[x]
     return cal_square(common)
     
-def find_point():
-    points = listbox_1.get(0, END)
-    listpoint_1 = []
-    for i in points:
-        buf = list(map(float, i.split(";")))
-        listpoint_1.append(buf)
-    points = listbox_2.get(0, END)
-    listpoint_2 = []
-    for i in points:
-        buf = list(map(float, i.split(";")))
-        listpoint_2.append(buf)
+def find_point(listpoint_1, listpoint_2):
     if len(listpoint_1) < 3 or len(listpoint_2) < 3:
         show_error("Недостаточно точек")
         return [], [], [], [], []
@@ -207,103 +251,96 @@ def find_point():
     common = find_common(group_point_1, group_point_2)
     return group_point_1, group_point_2, circle_1, circle_2, common
 
+def draw_line(point1, point2):
+    x1 = point1[0] * 40 + 600
+    y1 = 400 - point1[1] * 40
+    x2 = point2[0] * 40 + 600
+    y2 = 400 - point2[1] * 40
+    canvas.create_line(x1, y1, x2, y2)
+
 def draw(group_point_1, group_point_2, circle_1, circle_2, common):
-    canvas.delete("all")
-    points = group_point_1 + group_point_2 + common
-    xmax = xmin = points[0][0]
-    ymax = ymin = points[0][1]
-    for i in range(len(points)):
-        if points[i][0] > xmax:
-            xmax = points[i][0]
-        if points[i][0] < xmin:
-            xmin = points[i][0]
-        if points[i][1] > ymax:
-            ymax = points[i][1]
-        if points[i][1] < ymin:
-            ymin = points[i][1]
-    s_x = (800 - 50)/(xmax - xmin)
-    s_y = (800 - 50)/(ymax - ymin)
-    s_all = min(s_x, s_y)
-    o_x = -xmin * s_all + 25
-    o_y = -ymin * s_all + 25
-    for i in range(len(group_point_1)):
-        x = group_point_1[i][0] * s_all + o_x
-        y = 800 - (group_point_1[i][1] * s_all + o_y)
-        x1 = group_point_1[i-1][0] * s_all + o_x
-        y1 = 800 - (group_point_1[i-1][1] * s_all + o_y)
-        canvas.create_oval(x-6,y-6,x+6,y+6,fill='blue')
-        canvas.create_line(x, y, x1, y1, fill = "black")
-    for i in range(len(group_point_2)):
-        x = group_point_2[i][0] * s_all + o_x
-        y = 800 - (group_point_2[i][1] * s_all + o_y)
-        x1 = group_point_2[i-1][0] * s_all + o_x
-        y1 = 800 - (group_point_2[i-1][1] * s_all + o_y)
-        canvas.create_line(x, y, x1, y1, fill = "black")
-        canvas.create_oval(x-6,y-6,x+6,y+6,fill='green')
-    if len(common) > 3:
-        common_area = cal_common_square(common)
-    common_point = [(point[0] * s_all + o_x, 800 - (point[1] * s_all + o_y)) for point in common]
     for i in range(len(common)):
-        x = common[i][0] * s_all + o_x
-        y = 800 - (common[i][1] * s_all + o_y)
-        canvas.create_oval(x-6,y-6,x+6,y+6,fill='red')
-
-    x1 = (circle_1[0] - distance(circle_1, group_point_1[0])) * s_all + o_x
-    y1 = 800 - ((circle_1[1] - distance(circle_1, group_point_1[1])) * s_all + o_y)
-    x2 = (circle_1[0] + distance(circle_1, group_point_1[0])) * s_all + o_x
-    y2 = 800 - ((circle_1[1] + distance(circle_1, group_point_1[1])) * s_all + o_y)
-
-    x3 = (circle_2[0] - distance(circle_2, group_point_2[0])) * s_all + o_x
-    y3 = 800-((circle_2[1] - distance(circle_2, group_point_2[1])) * s_all + o_y)
-    x4 = (circle_2[0] + distance(circle_2, group_point_2[0])) * s_all + o_x
-    y4 = 800-((circle_2[1] + distance(circle_2, group_point_2[1])) * s_all + o_y)
-
+        draw_point(common[i], "red")
+    for i in range(len(group_point_1)):
+        draw_line(group_point_1[i-1], group_point_1[i-1])
+    for i in range(len(group_point_2)):
+        draw_line(group_point_2[i-1], group_point_2[i-1])
+    x1 = ((circle_1[0]-distance(circle_1, group_point_1[0])) * 40) + 600
+    y1 = 400 - ((circle_1[1]-distance(circle_1, group_point_1[0])) * 40)
+    x2 = ((circle_1[0]+distance(circle_1, group_point_1[0])) * 40) + 600
+    y2 = 400 - ((circle_1[1]+distance(circle_1, group_point_1[0])) * 40)
     canvas.create_oval(x1, y1, x2, y2)
-    canvas.create_oval(x3, y3, x4, y4)
-    canvas.create_line(o_x, 0, o_x, 800)
-    canvas.create_line(0, 800 - o_y, 1000, 800 - o_y)
-    canvas.create_polygon(common_point, fill = 'red', outline = 'black')
+
+    x1 = ((circle_2[0]-distance(circle_2, group_point_2[0])) * 40) + 600
+    y1 = 400 - ((circle_2[1]-distance(circle_2, group_point_2[0])) * 40)
+    x2 = ((circle_2[0]+distance(circle_2, group_point_2[0])) * 40) + 600
+    y2 = 400 - ((circle_2[1]+distance(circle_2, group_point_2[0])) * 40)
+    canvas.create_oval(x1, y1, x2, y2)
+    common_area = cal_common_square(common) if len(common) > 2 else 0
+    new_common = []
+    for point in common:
+        x = point[0] * 40 + 600
+        y = 400 - (point[1] * 40)
+        new_common.append([x, y])
+    canvas.create_polygon(new_common, fill = "red")
     show_info("Площадь пересечения: " + str(round(common_area, 5)))
 
 def solve():
-    group_point_1, group_point_2, circle_1, circle_2, common = find_point()
+    canvas.delete("all")
+    canvas.create_line(0, 400, 1200, 400, arrow = "last", width = 3)
+    canvas.create_line(600, 0, 600, 800, arrow = "first", width = 3)
+    for i in range(20):
+        canvas.create_line(0, i * 40, 1200, i * 40)
+    for i in range(30):
+        canvas.create_line(i * 40, 0, i * 40, 800)
+    points = listbox_1.get(0, END)
+    listpoint_1 = []
+    for i in points:
+        buf = list(map(float, i.split(";")))
+        listpoint_1.append(buf)
+    points = listbox_2.get(0, END)
+    listpoint_2 = []
+    for i in points:
+        buf = list(map(float, i.split(";")))
+        listpoint_2.append(buf)
+    for x in listpoint_1:
+        draw_point(x, "blue")
+    for x in listpoint_2:
+        draw_point(x, "green")
+    group_point_1, group_point_2, circle_1, circle_2, common = find_point(listpoint_1, listpoint_2)
     if group_point_1 == [] or group_point_2 == []:
         return
     draw(group_point_1, group_point_2, circle_1, circle_2, common)
 
-def delete_all():
-    canvas.delete('all')
-    canvas.create_line(0, 400, 1000, 400)
-    canvas.create_line(500, 0, 500, 800)
-    entry_x.delete(0, 'end')
-    entry_x_change.delete(0, 'end')
-    entry_y.delete(0, 'end')
-    entry_y_change.delete(0, 'end')
-    listbox_1.delete(0, 'end')
-    listbox_2.delete(0, 'end')
-    type_combobox.set('')
-
 window = Tk()
-window.geometry("1500x900")
-window['background'] = 'tomato'
+window.geometry("1550x900")
+window['background'] = 'lavender'
 window.title("Lab_01")
+window.minsize(1400, 600)
 
 window.columnconfigure(0, weight = 1)
 window.columnconfigure(1, weight = 1)
 window.rowconfigure(0, weight = 1)
 
-frame_left = Frame(window, width = 1000, height = 850, background= "tomato")
+frame_left = Frame(window, width = 1200, height = 850, background= "lavender")
 frame_left.grid(row = 0, column = 0, padx=10, pady = 10, sticky="nsew")
 frame_left.rowconfigure(0, weight = 1)
 frame_left.rowconfigure(1, weight = 1)
 frame_left.columnconfigure(0, weight = 1)
 
-canvas = Canvas(frame_left, width=1000, height=800, bg = "white")
+canvas = Canvas(frame_left, width=1200, height=800, bg = "white")
 canvas.grid(row=0, column=0)
-canvas.create_line(0, 400, 1000, 400)
-canvas.create_line(500, 0, 500, 800)
+canvas.create_line(0, 400, 1200, 400, arrow = "last", width = 3)
+canvas.create_line(600, 0, 600, 800, arrow = "first", width = 3)
+for i in range(20):
+    canvas.create_line(0, i * 40, 1200, i * 40)
+for i in range(30):
+    canvas.create_line(i * 40, 0, i * 40, 800)
 
-frame_button = Frame(frame_left, width = 1000, height= 100, bg = "tomato")
+window.bind("<Button-1>", add_click_1)
+window.bind("<Button-3>", add_click_2)
+
+frame_button = Frame(frame_left, width = 1000, height= 100, bg = "lavender")
 frame_button.grid(row = 1, column=0)
 frame_button.columnconfigure(0, weight = 1)
 frame_button.columnconfigure(1, weight = 1)
@@ -319,11 +356,11 @@ solve_button = Button(frame_button, text = "Решить", command = solve)
 solve_button.grid(row =0, column= 0, padx=5)
 change_button = Button(frame_button, text = "Изменить точку", command = change_point)
 change_button.grid(row =0, column= 1, padx=5)
-x_change_label = Label(frame_button, text = "X: ", bg = "tomato", font = "Arial 14")
+x_change_label = Label(frame_button, text = "X: ", bg = "lavender", font = "Arial 14")
 x_change_label.grid(row =0, column= 2, padx=5)
 entry_x_change = Entry(frame_button, width = 20)
 entry_x_change.grid(row =0, column= 3, padx=5)
-y_change_label = Label(frame_button, text = "Y: ", bg = "tomato", font = "Arial 14")
+y_change_label = Label(frame_button, text = "Y: ", bg = "lavender", font = "Arial 14")
 y_change_label.grid(row =0, column= 4, padx=5)
 entry_y_change = Entry(frame_button, width = 20)
 entry_y_change.grid(row =0, column= 5, padx=5)
@@ -332,43 +369,43 @@ delete_button.grid(row =0, column= 6, padx=5)
 delete_button = Button(frame_button, text = "Очистить", command = delete_all)
 delete_button.grid(row =0, column= 7, padx=5)
 
-frame_right = Frame(window, width = 450, height = 850, background= "tomato")
+frame_right = Frame(window, width = 450, height = 850, background= "lavender")
 frame_right.grid(row = 0, column = 1, padx=10, pady = 10, sticky="nsew")
 frame_right.rowconfigure(0, weight = 1)
 frame_right.rowconfigure(1, weight = 1)
 frame_right.columnconfigure(0, weight = 1)
 frame_right.columnconfigure(1, weight = 1)
 
-frame_listbox_1 = Frame(frame_right, background = "tomato")
+frame_listbox_1 = Frame(frame_right, background = "lavender")
 frame_listbox_1.grid(row=0, columnspan=2,pady = 10)
-frame_listbox_2 = Frame(frame_right, background = "tomato")
+frame_listbox_2 = Frame(frame_right, background = "lavender")
 frame_listbox_2.grid(row=1, columnspan=2, pady = 10)
 
-listbox_label_1 = Label(frame_listbox_1, text = "Множество точек 1", width = 20)
+listbox_label_1 = Label(frame_listbox_1, text = "Множество точек 1", width = 18)
 listbox_label_1.pack(side="top")
-listbox_label_2 = Label(frame_listbox_2, text = "Множество точек 2", width = 20)
+listbox_label_2 = Label(frame_listbox_2, text = "Множество точек 2", width = 18)
 listbox_label_2.pack(side="top")
 
-listbox_1 = Listbox(frame_listbox_1, selectmode = SINGLE, height = 15, width = 40)
+listbox_1 = Listbox(frame_listbox_1, selectmode = SINGLE, height = 15, width = 35)
 listbox_1.pack(side = LEFT, fill = "both")
-listbox_2 = Listbox(frame_listbox_2, selectmode = SINGLE, height = 15, width = 40)
+listbox_2 = Listbox(frame_listbox_2, selectmode = SINGLE, height = 15, width = 35)
 listbox_2.pack(side = LEFT, fill = "both")
 
 scrollbar_listbox_1 = Scrollbar(frame_listbox_1)
-scrollbar_listbox_1.pack(side = RIGHT, fill= "both")
+scrollbar_listbox_1.pack(side = RIGHT, fill = BOTH)
 scrollbar_listbox_2 = Scrollbar(frame_listbox_2)
-scrollbar_listbox_2.pack(side = RIGHT, fill = "both")
+scrollbar_listbox_2.pack(side = RIGHT, fill = BOTH)
 
-x_label = Label(frame_right, text = "X: ", bg = "tomato", font = "Arial 14")
+x_label = Label(frame_right, text = "X: ", bg = "lavender", font = "Arial 14")
 x_label.grid(row = 2, column=0, pady = 10)
 entry_x = Entry(frame_right)
 entry_x.grid(row = 2, column=1, pady = 10)
-y_label = Label(frame_right, text = "Y: ", bg = "tomato", font = "Arial 14")
+y_label = Label(frame_right, text = "Y: ", bg = "lavender", font = "Arial 14")
 y_label.grid(row = 3, column=0, pady = 10)
 entry_y = Entry(frame_right)
 entry_y.grid(row = 3, column=1, pady = 10)
 
-type_label = Label(frame_right, text = "Множество: ", bg = "tomato", font = "Arial 14")
+type_label = Label(frame_right, text = "Множество: ", bg = "lavender", font = "Arial 14")
 type_label.grid(row = 4, column=0, pady = 10)
 
 type_combobox = ttk.Combobox(frame_right, value = ['1', '2'], state = "readonly")
