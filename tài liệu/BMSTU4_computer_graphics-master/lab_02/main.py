@@ -314,6 +314,8 @@ def print_scene():
     for i in range(len(list_point) - 2 - 8):
         paint_point(list_point[i])
         paint_line(list_point[i], list_point[i + 1])
+    canv.create_polygon(list_point[:len(list_point) - 9], fill = "black")
+        
     paint_point(list_point[len(list_point) - 1 - 8])
 
     paint_line(list_point[len(list_point) - 8],
@@ -333,11 +335,8 @@ def print_scene():
 
 
 def create_scene():
-    for i in np.arange(0, 2 * pi * 2, 0.1):
-        # try:
-        x = func_x(i)
-        y = func_y(i)
-        list_point.append([x, y, 1])
+    for i in range(0, 3610, 1):
+    	list_point.append([10+300*cos(i/10), 10 + 300*sin(i/10), 1])
         # except:
         # pass
     list_point.append([0, 0, 1])
