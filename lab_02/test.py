@@ -9,6 +9,7 @@ b = 60
 win_size = 800
 radius_point = 3
 list_point = []
+list_circle = []
 false = "-"
 inverse_matrix = [[1, 0, 0],
                   [0, 1, 0],
@@ -140,7 +141,8 @@ def moving_func(dx, dy):
 
     for i in range(len(list_point)):
         list_point[i] = multiplication_vector(list_point[i], matrix_mov)
-        # list_point[i] = np.dot(list_point[i], matrix_mov)
+    for i in range(len(list_circle)):
+        list_circle[i] = multiplication_vector(list_circle[i], matrix_mov)
     print_scene()
 
 
@@ -190,8 +192,8 @@ def rotation():
 
     for i in range(len(list_point)):
         list_point[i] = multiplication_vector(list_point[i], matrix_res)
-        # list_point[i] = np.dot(list_point[i], matrix)
-
+    for i in range(len(list_circle)):
+        list_circle[i] = multiplication_vector(list_circle[i], matrix_res)
     inverse_matrix = inverse_func(matrix_res)
 
     print_scene()
@@ -269,8 +271,8 @@ def scale():
 
     for i in range(len(list_point)):
         list_point[i] = multiplication_vector(list_point[i], matrix_res)
-        # list_point[i] = np.dot(list_point[i], matrix)
-
+    for i in range(len(list_circle)):
+        list_circle[i] = multiplication_vector(list_circle[i], matrix_res)
     print_scene()
 
 
@@ -293,23 +295,41 @@ def paint_point(cordinate):
 
 
 def paint_line(a, b):
-    t = 0
-    canv.create_line(a[0], (a[1] + t), b[0],
-                     b[1] + t, fill="black", width=3)
+    canv.create_line(a[0], a[1], b[0], b[1], fill="black", width=3)
+
+def paint_oval(circle, str):
+    x = circle[0][0]
+    y = circle[0][1]
+    rx = circle[1]
+    ry = circle[2]
+    canv.create_oval(x - rx, y - ry, x + rx, y + ry, fill = str, width=3)
 
 
 def print_scene():
     canv.delete(ALL)
-    canv.create_line(win_size/2, win_size, win_size/2, 0, width=2, arrow=LAST)
-    canv.create_line(0, win_size / 2, win_size,
-                     win_size / 2, width=2, arrow=LAST)
     for i in range(25):
         paint_point(list_point[i])
         paint_line(list_point[i+1], list_point[i])
     for i in range(25, len(list_point)):
         paint_point(list_point[i])
-        if i<len(list_point)-1:
+        if i < len(list_point) - 1:
             paint_line(list_point[i+1], list_point[i])
+
+    for i in range(len(list_circle) - 1):
+        if i % 3600 == 3599:
+            continue
+        paint_line(list_circle[i], list_circle[i + 1])
+
+    canv.create_line(win_size/2, win_size, win_size/2, 0, width=2, arrow=LAST)
+    canv.create_line(0, win_size / 2, win_size,
+                     win_size / 2, width=2, arrow=LAST)
+    
+
+def add_circle(point, radius):
+    x = point[0]
+    y = point[1]
+    for i in range(0, 3600, 1):
+        list_circle.append([x + radius*cos(i/10),y + radius*sin(i/10), 1])
 
 def create_scene():
     list_point.append([135, 523, 1])
@@ -341,8 +361,24 @@ def create_scene():
     list_point.append([141, 560,1])
     list_point.append([227, 627, 1])
     list_point.append([646, 627, 1])
+    list_point.append([745, 550, 1])
     list_point.append([763, 523, 1])
-    
+
+    add_circle([240, 596], 30)
+    add_circle([329, 596], 30)
+    add_circle([428, 596], 30)
+    add_circle([527, 596], 30)
+    add_circle([635, 596], 30) 
+    add_circle([165, 544], 26)
+    add_circle([727, 529], 26)
+    add_circle([240, 596], 10)
+    add_circle([329, 596], 10)
+    add_circle([428, 596], 10)
+    add_circle([527, 596], 10)
+    add_circle([635, 596], 10) 
+    add_circle([165, 544], 8)
+    add_circle([727, 529], 8)
+
     print_scene()
 
 
@@ -353,7 +389,6 @@ def return_all():
                       [0, 0, 1]]
     for i in range(len(list_point) - 1, -1, -1):
         del list_point[i]
-    # print("Массив: ", list_point)
     create_scene()
 
 
