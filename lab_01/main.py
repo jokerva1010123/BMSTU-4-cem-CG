@@ -3,7 +3,7 @@ import tkinter.ttk as ttk
 import tkinter.messagebox as box
 from math import *
 
-EPS = 1e-4
+EPS = 1e-2
 task = '''Заданы два множества точек на плоскости(-15 <= x <= 15),
 (-10 <= y <= 10).В каждом множестве найти три равноудалённые друг от друга точки.
 Через эти точки провести окружности. В каждую окружность вписать шестиугольник.
@@ -48,6 +48,27 @@ def add_point():
     scrollbar_listbox_1.config(command = listbox_1.yview)
     listbox_2.config(yscrollcommand = scrollbar_listbox_2.set)
     scrollbar_listbox_2.config(command = listbox_2.yview)
+    canvas.delete("all")
+    canvas.create_line(0, 400, 1200, 400, arrow = "last", width = 3)
+    canvas.create_line(600, 0, 600, 800, arrow = "first", width = 3)
+    for i in range(20):
+        canvas.create_line(0, i * 40, 1200, i * 40)
+    for i in range(30):
+        canvas.create_line(i * 40, 0, i * 40, 800)
+    points = listbox_1.get(0, END)
+    listpoint_1 = []
+    for i in points:
+        buf = list(map(float, i.split(";")))
+        listpoint_1.append(buf)
+    points = listbox_2.get(0, END)
+    listpoint_2 = []
+    for i in points:
+        buf = list(map(float, i.split(";")))
+        listpoint_2.append(buf)
+    for x in listpoint_1:
+        draw_point(x, "blue")
+    for x in listpoint_2:
+        draw_point(x, "green")
 
 def delete_point():
     point_1 = listbox_1.curselection()
@@ -59,6 +80,27 @@ def delete_point():
         listbox_1.delete(point_1[0])
     if point_2 != ():
         listbox_2.delete(point_2[0])
+    canvas.delete("all")
+    canvas.create_line(0, 400, 1200, 400, arrow = "last", width = 3)
+    canvas.create_line(600, 0, 600, 800, arrow = "first", width = 3)
+    for i in range(20):
+        canvas.create_line(0, i * 40, 1200, i * 40)
+    for i in range(30):
+        canvas.create_line(i * 40, 0, i * 40, 800)
+    points = listbox_1.get(0, END)
+    listpoint_1 = []
+    for i in points:
+        buf = list(map(float, i.split(";")))
+        listpoint_1.append(buf)
+    points = listbox_2.get(0, END)
+    listpoint_2 = []
+    for i in points:
+        buf = list(map(float, i.split(";")))
+        listpoint_2.append(buf)
+    for x in listpoint_1:
+        draw_point(x, "blue")
+    for x in listpoint_2:
+        draw_point(x, "green")
 
 def change_point():
     try:
@@ -84,6 +126,27 @@ def change_point():
     if point_2 != ():
         listbox_2.delete(point_2[0])
         listbox_2.insert(point_2[0], "{};{}".format(x_new, y_new))
+    canvas.delete("all")
+    canvas.create_line(0, 400, 1200, 400, arrow = "last", width = 3)
+    canvas.create_line(600, 0, 600, 800, arrow = "first", width = 3)
+    for i in range(20):
+        canvas.create_line(0, i * 40, 1200, i * 40)
+    for i in range(30):
+        canvas.create_line(i * 40, 0, i * 40, 800)
+    points = listbox_1.get(0, END)
+    listpoint_1 = []
+    for i in points:
+        buf = list(map(float, i.split(";")))
+        listpoint_1.append(buf)
+    points = listbox_2.get(0, END)
+    listpoint_2 = []
+    for i in points:
+        buf = list(map(float, i.split(";")))
+        listpoint_2.append(buf)
+    for x in listpoint_1:
+        draw_point(x, "blue")
+    for x in listpoint_2:
+        draw_point(x, "green")
 
 def add_click_1(event):
     if str(event.widget) != '.!frame.!canvas':
@@ -262,9 +325,9 @@ def draw(group_point_1, group_point_2, circle_1, circle_2, common):
     for i in range(len(common)):
         draw_point(common[i], "red")
     for i in range(len(group_point_1)):
-        draw_line(group_point_1[i-1], group_point_1[i-1])
+        draw_line(group_point_1[i-1], group_point_1[i])
     for i in range(len(group_point_2)):
-        draw_line(group_point_2[i-1], group_point_2[i-1])
+        draw_line(group_point_2[i-1], group_point_2[i])
     x1 = ((circle_1[0]-distance(circle_1, group_point_1[0])) * 40) + 600
     y1 = 400 - ((circle_1[1]-distance(circle_1, group_point_1[0])) * 40)
     x2 = ((circle_1[0]+distance(circle_1, group_point_1[0])) * 40) + 600
