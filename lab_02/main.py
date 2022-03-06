@@ -252,7 +252,7 @@ def scale():
     ym = entry_ym.get()
     if (check_answer(ym) == False):
         return
-    ym = -float_answer(ym)
+    ym = float_answer(ym)
     if (ym == false):
         return
 
@@ -394,8 +394,8 @@ def return_all():
     inverse_matrix = [[1, 0, 0],
                       [0, 1, 0],
                       [0, 0, 1]]
-    for i in range(len(list_point) - 1, -1, -1):
-        del list_point[i]
+    list_circle.clear()
+    list_point.clear()
     create_scene()
 
 if __name__ == "__main__":
