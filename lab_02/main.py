@@ -1,255 +1,499 @@
-import math
-import warnings
+import numpy as np
+from copy import deepcopy
+from math import *
 from tkinter import *
 from tkinter import ttk
-from PIL import Image, ImageTk
+from tkinter import messagebox as mb
 
-class AutoScrollbar(Scrollbar):
-    """ A scrollbar that hides itself if it's not needed"""
-    def set(self, lo, hi):
-        if float(lo) <= 0.0 and float(hi) >= 1.0:
-            self.grid_remove()
-        else:
-            self.grid()
-            Scrollbar.set(self, lo, hi)
+def show_info(str):
+    mb.showinfo("Информация", str)
+    return
 
-class CanvasImage:
-    """ Display and zoom image """
-    def __init__(self, placeholder, path):
-        """ Initialize the ImageFrame """
-        self.anpha = 0
-        self.imscale = 1.0  # scale for the canvas image zoom, public for outer classes
-        self.delta = 1.3  # zoom magnitude
-        self.__filter = Image.ANTIALIAS  # could be: NEAREST, BILINEAR, BICUBIC and ANTIALIAS
-        self.__previous_state = 0  # previous state of the keyboard
-        self.path = path  # path to the image, should be public for outer classes
-        # Create ImageFrame in placeholder widget
-        self.__imframe = Frame(placeholder)  # placeholder of the ImageFrame object
-        # Vertical and horizontal scrollbars for canvas
-        hbar = AutoScrollbar(self.__imframe, orient='horizontal')
-        vbar = AutoScrollbar(self.__imframe, orient='vertical')
-        hbar.grid(row=1, column=0, sticky='we')
-        vbar.grid(row=0, column=1, sticky='ns')
-        # Create canvas and bind it with scrollbars. Public for outer classes
-        self.canvas = Canvas(self.__imframe, xscrollcommand=hbar.set, yscrollcommand=vbar.set)
-        self.canvas.grid(row=0, column=0, sticky='nswe')
-        self.canvas.update()  # wait till canvas is created
-        hbar.configure(command=self.__scroll_x)  # bind scrollbars to the canvas
-        vbar.configure(command=self.__scroll_y)
-        # Bind events to the Canvas
-        self.canvas.bind('<Configure>', lambda event: self.__show_image())  # canvas is resized
-        self.canvas.bind('<ButtonPress-1>', self.__move_from)  # remember canvas position
-        self.canvas.bind('<B1-Motion>',     self.__move_to)  # move canvas to the new position
-        self.canvas.bind('<MouseWheel>', self.__wheel)  # zoom for Windows and MacOS, but not Linux
-        self.canvas.bind('<Button-5>',   self.__wheel)  # zoom for Linux, wheel scroll down
-        self.canvas.bind('<Button-4>',   self.__wheel)  # zoom for Linux, wheel scroll up
-        self.canvas.bind('a', self.left)
-        self.canvas.bind('d', self.right)
-        # Decide if this image huge or not
-        self.__huge = False  # huge or not
-        self.__huge_size = 14000  # define size of the huge image
-        self.__band_width = 1024  # width of the tile band
-        Image.MAX_IMAGE_PIXELS = 1000000000  # suppress DecompressionBombError for the big image
-        self.__image = Image.open(self.path)  # open image
-        self.imwidth, self.imheight = self.__image.size  # public for outer classes
-        if self.imwidth * self.imheight > self.__huge_size * self.__huge_size and \
-           self.__image.tile[0][0] == 'raw':  # only raw images could be tiled
-            self.__huge = True  # image is huge
-            self.__offset = self.__image.tile[0][2]  # initial tile offset
-            self.__tile = [self.__image.tile[0][0],  # it have to be 'raw'
-                           [0, 0, self.imwidth, 0],  # tile extent (a rectangle)
-                           self.__offset,
-                           self.__image.tile[0][3]]  # list of arguments to the decoder
-        self.__min_side = min(self.imwidth, self.imheight)  # get the smaller image side
-        # Create image pyramid
-        self.__pyramid = [self.smaller()] if self.__huge else [Image.open(self.path)]
-        # Set ratio coefficient for image pyramid
-        self.__ratio = max(self.imwidth, self.imheight) / self.__huge_size if self.__huge else 1.0
-        self.__curr_img = 0  # current image from the pyramid
-        self.__scale = self.imscale * self.__ratio  # image pyramide scale
-        self.__reduction = 2  # reduction degree of image pyramid
-        w, h = self.__pyramid[-1].size
-        while w > 512 and h > 512:  # top pyramid image is around 512 pixels in size
-            w /= self.__reduction  # divide on reduction degree
-            h /= self.__reduction  # divide on reduction degree
-            self.__pyramid.append(self.__pyramid[-1].resize((int(w), int(h)), self.__filter))
-        # Put image into container rectangle and use it to set proper coordinates to the image
-        self.container = self.canvas.create_rectangle((0, 0, self.imwidth, self.imheight), width=0)
-        self.__show_image()  # show image on the canvas
-        self.canvas.focus_set()  # set focus on the canvas
+a = 40
+b = 60
+win_size = 800
+radius_point = 3
+list_point = []
+list_circle = []
+false = "-"
+inverse_matrix = [[1, 0, 0],
+                  [0, 1, 0],
+                  [0, 0, 1]]
 
-    def smaller(self):
-        """ Resize image proportionally and return smaller image """
-        w1, h1 = float(self.imwidth), float(self.imheight)
-        w2, h2 = float(self.__huge_size), float(self.__huge_size)
-        aspect_ratio1 = w1 / h1
-        aspect_ratio2 = w2 / h2  # it equals to 1.0
-        if aspect_ratio1 == aspect_ratio2:
-            image = Image.new('RGB', (int(w2), int(h2)))
-            k = h2 / h1  # compression ratio
-            w = int(w2)  # band length
-        elif aspect_ratio1 > aspect_ratio2:
-            image = Image.new('RGB', (int(w2), int(w2 / aspect_ratio1)))
-            k = h2 / w1  # compression ratio
-            w = int(w2)  # band length
-        else:  # aspect_ratio1 < aspect_ration2
-            image = Image.new('RGB', (int(h2 * aspect_ratio1), int(h2)))
-            k = h2 / h1  # compression ratio
-            w = int(h2 * aspect_ratio1)  # band length
-        i, j, n = 0, 1, round(0.5 + self.imheight / self.__band_width)
-        while i < self.imheight:
-            print('\rOpening image: {j} from {n}'.format(j=j, n=n), end='')
-            band = min(self.__band_width, self.imheight - i)  # width of the tile band
-            self.__tile[1][3] = band  # set band width
-            self.__tile[2] = self.__offset + self.imwidth * i * 3  # tile offset (3 bytes per pixel)
-            self.__image.close()
-            self.__image = Image.open(self.path)  # reopen / reset image
-            self.__image.size = (self.imwidth, band)  # set size of the tile band
-            self.__image.tile = [self.__tile]  # set tile
-            cropped = self.__image.crop((0, 0, self.imwidth, band))  # crop tile band
-            image.paste(cropped.resize((w, int(band * k)+1), self.__filter), (0, int(i * k)))
-            i += band
-            j += 1
-        print('\r' + 30*' ' + '\r', end='')  # hide printed string
-        return image
 
-    def grid(self, **kw):
-        """ Put CanvasImage widget on the parent widget """
-        self.__imframe.grid(**kw)  # place CanvasImage widget on the grid
-        self.__imframe.grid(sticky='nswe')  # make frame container sticky
-        self.__imframe.rowconfigure(0, weight=1)  # make canvas expandable
-        self.__imframe.columnconfigure(0, weight=1)
+def func_x(t):
+    return (a + b)*cos(t)-a*cos((a+b)*t/a)
 
-    # noinspection PyUnusedLocal
-    def __scroll_x(self, *args, **kwargs):
-        """ Scroll canvas horizontally and redraw the image """
-        self.canvas.xview(*args)  # scroll horizontally
-        self.__show_image()  # redraw the image
 
-    # noinspection PyUnusedLocal
-    def __scroll_y(self, *args, **kwargs):
-        """ Scroll canvas vertically and redraw the image """
-        self.canvas.yview(*args)  # scroll vertically
-        self.__show_image()  # redraw the image
+def func_y(t):
+    return (a+b)*sin(t)-a*sin((a+b)*t/a)
 
-    def __show_image(self):
-        """ Show image on the Canvas. Implements correct image zoom almost like in Google Maps """
-        box_image = self.canvas.coords(self.container)  # get image area
-        box_canvas = (self.canvas.canvasx(0),  # get visible area of the canvas
-                      self.canvas.canvasy(0),
-                      self.canvas.canvasx(self.canvas.winfo_width()),
-                      self.canvas.canvasy(self.canvas.winfo_height()))
-        box_img_int = tuple(map(int, box_image))  # convert to integer or it will not work properly
-        # Get scroll region box
-        box_scroll = [min(box_img_int[0], box_canvas[0]), min(box_img_int[1], box_canvas[1]),
-                      max(box_img_int[2], box_canvas[2]), max(box_img_int[3], box_canvas[3])]
-        # Horizontal part of the image is in the visible area
-        if  box_scroll[0] == box_canvas[0] and box_scroll[2] == box_canvas[2]:
-            box_scroll[0]  = box_img_int[0]
-            box_scroll[2]  = box_img_int[2]
-        # Vertical part of the image is in the visible area
-        if  box_scroll[1] == box_canvas[1] and box_scroll[3] == box_canvas[3]:
-            box_scroll[1]  = box_img_int[1]
-            box_scroll[3]  = box_img_int[3]
-        # Convert scroll region to tuple and to integer
-        self.canvas.configure(scrollregion=tuple(map(int, box_scroll)))  # set scroll region
-        x1 = max(box_canvas[0] - box_image[0], 0)  # get coordinates (x1,y1,x2,y2) of the image tile
-        y1 = max(box_canvas[1] - box_image[1], 0)
-        x2 = min(box_canvas[2], box_image[2]) - box_image[0]
-        y2 = min(box_canvas[3], box_image[3]) - box_image[1]
-        if int(x2 - x1) > 0 and int(y2 - y1) > 0:  # show image if it in the visible area
-            if self.__huge and self.__curr_img < 0:  # show huge image
-                h = int((y2 - y1) / self.imscale)  # height of the tile band
-                self.__tile[1][3] = h  # set the tile band height
-                self.__tile[2] = self.__offset + self.imwidth * int(y1 / self.imscale) * 3
-                self.__image.close()
-                self.__image = Image.open(self.path)  # reopen / reset image
-                self.__image.size = (self.imwidth, h)  # set size of the tile band
-                self.__image.tile = [self.__tile]
-                image = self.__image.crop((int(x1 / self.imscale), 0, int(x2 / self.imscale), h))
-            else:  # show normal image
-                image = self.__pyramid[max(0, self.__curr_img)].crop(  # crop current img from pyramid
-                                    (int(x1 / self.__scale), int(y1 / self.__scale),
-                                     int(x2 / self.__scale), int(y2 / self.__scale)))
-            image.rotate(self.anpha)
-            imagetk = ImageTk.PhotoImage(image.resize((int(x2 - x1), int(y2 - y1)), self.__filter))
-            imageid = self.canvas.create_image(max(box_canvas[0], box_img_int[0]),
-                                               max(box_canvas[1], box_img_int[1]),
-                                               anchor='nw', image=imagetk)
-            self.canvas.lower(imageid)  # set image into background
-            self.canvas.imagetk = imagetk  # keep an extra reference to prevent garbage-collection
 
-    def __move_from(self, event):
-        """ Remember previous coordinates for scrolling with the mouse """
-        self.canvas.scan_mark(event.x, event.y)
+def multiplication_matrix(matrix_a, matrix_b):
+    matrix_res = [[0, 0, 0], [0, 0, 0], [0, 0, 0]]
+    for i in range(3):
+        for j in range(3):
+            temp = 0
+            for k in range(3):
+                temp += matrix_a[i][k] * matrix_b[k][j]
+            matrix_res[i][j] = temp
+    return matrix_res
 
-    def __move_to(self, event):
-        """ Drag (move) canvas to the new position """
-        self.canvas.scan_dragto(event.x, event.y, gain=1)
-        self.__show_image()  # zoom tile and show it on the canvas
 
-    def outside(self, x, y):
-        """ Checks if the point (x,y) is outside the image area """
-        bbox = self.canvas.coords(self.container)  # get image area
-        if bbox[0] < x < bbox[2] and bbox[1] < y < bbox[3]:
-            return False  # point (x,y) is inside the image area
-        else:
-            return True  # point (x,y) is outside the image area
+def multiplication_vector(vector, matrix):
+    vector_res = [0, 0, 0]
 
-    def __wheel(self, event):
-        """ Zoom with mouse wheel """
-        x = self.canvas.canvasx(event.x)  # get coordinates of the event on the canvas
-        y = self.canvas.canvasy(event.y)
-        if self.outside(x, y): return  # zoom only inside image area
-        scale = 1.0
-        # Respond to Linux (event.num) or Windows (event.delta) wheel event
-        if event.num == 5 or event.delta == -120:  # scroll down, smaller
-            if round(self.__min_side * self.imscale) < 30: return  # image is less than 30 pixels
-            self.imscale /= self.delta
-            scale        /= self.delta
-        if event.num == 4 or event.delta == 120:  # scroll up, bigger
-            i = min(self.canvas.winfo_width(), self.canvas.winfo_height()) >> 1
-            if i < self.imscale: return  # 1 pixel is bigger than the visible area
-            self.imscale *= self.delta
-            scale        *= self.delta
-        # Take appropriate image from the pyramid
-        k = self.imscale * self.__ratio  # temporary coefficient
-        self.__curr_img = min((-1) * int(math.log(k, self.__reduction)), len(self.__pyramid) - 1)
-        self.__scale = k * math.pow(self.__reduction, max(0, self.__curr_img))
-        #
-        self.canvas.scale('all', x, y, scale, scale)  # rescale all objects
-        # Redraw some figures before showing image on the screen
-        self.__show_image()
+    for i in range(3): 
+        temp = 0
+        for k in range(3):
+            temp += vector[k] * matrix[k][i]
+        vector_res[i] = temp
 
-    def left(self, event):
-        self.anpha += 10
-        print(self.anpha)
-        self.__show_image()
+    return vector_res
+
+
+def minor(m, i, j):
+    return m[(i + 1) % 3][(j + 1) % 3] * m[(i + 2) % 3][(j + 2) % 3] - \
+        m[(i + 1) % 3][(j + 2) % 3] * m[(i + 2) % 3][(j + 1) % 3]
+
+
+def transpose(matrix):
+    matrix_res = deepcopy(matrix)
+
+    for i in range(3):
+        for j in range(0, i):
+            matrix_res[i][j], matrix_res[j][i] = matrix_res[j][i], matrix_res[i][j]
+
+    return matrix_res
+
+
+def determinant(m):
+    det = 0
+    for i in range(3):
+        det += m[0][i] * minor(m, 0, i)
+
+    return det
+
+
+def inverse_func(matrix):
+    matrix_res = transpose(matrix)
+    matrix_copy = deepcopy(matrix_res)
+
+    # Ищем определитель матрицы
+    det = determinant(matrix_res)
+    if det == 0:
+        print("det = ", det)
+        # det = 1
+        return
+
+    # Ищем алгебраич. доп.
+    for i in range(3):
+        for j in range(3):
+            matrix_res[i][j] = minor(matrix_copy, i, j) / det
+
+    return matrix_res
+    # return np.linalg.inv(matrix)
+
+def info_show():
+    info = Toplevel(window)
+    info_txt = "Условия задачи: Нарисовать рисунок.\
+\n\nЗатем его переместить, промасштабировать и повернуть."
+    label1 = Label(info, text=info_txt, font="Verdana 14")
+    label1.pack()
+
+
+def print_error(string_error):
+    mb.showerror(title="Ошибка", message=string_error)
+
+
+def check_answer(answer):
+    correct = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", " ", ".", "-"]
+
+    for i in answer:
+        if i not in correct:
+            print_error("Возможно, вы ввели некорректные символы.")
+            return False
+    return True
+
+
+def int_answer(answer):
+    try:
+        a = int(answer)
+    except:
+        print_error("Возможно, у вас вещественное значение или пустой ввод.")
+        return false
+
+    return a
+
+
+def float_answer(answer):
+    try:
+        a = float(answer)
+    except:
+        print_error("Возможно, у вас пустой ввод.")
+        return false
+
+    return a
+
+
+def moving_func(dx, dy):
+    matrix_mov = [[1, 0, 0],
+                  [0, 1, 0],
+                  [dx, -dy, 1]]
+
+    global inverse_matrix
+    inverse_matrix = inverse_func(matrix_mov)
+
+    for i in range(len(list_point)):
+        list_point[i] = multiplication_vector(list_point[i], matrix_mov)
+    for i in range(len(list_circle)):
+        list_circle[i] = multiplication_vector(list_circle[i], matrix_mov)
+    print_scene()
+
+
+def rotation():
+    angle = entry_angle.get()
+    if (check_answer(angle) == False):
+        return
+    angle = float_answer(angle)
+    if (angle == false):
+        return
+
+    xm = entry_angle_xm.get()
+    if (check_answer(xm) == False):
+        return
+    xm = float_answer(xm)
+    if (xm == false):
+        return
+
+    ym = entry_angle_ym.get()
+    if (check_answer(ym) == False):
+        return
+    ym = float_answer(ym)
+    if (ym == false):
+        return
+
+    # print("angle = ", angle, "Xm = ", xm, "Ym = ", ym)
+    dx = -xm-400
+    dy = ym-400
+    # dx = -list_point[len(list_point) - 1][0]
+    # dy = -list_point[len(list_point) - 1][1]
+
+    # Переводим в радианы.
+    angle *= -pi / 180
+    matrix = [[cos(angle), sin(angle), 0],
+              [-sin(angle), cos(angle), 0],
+              [0, 0, 1]]
+
+    matrix_mov = [[1, 0, 0],
+                  [0, 1, 0],
+                  [dx, dy, 1]]
     
-    def right(self, event):
-        self.anpha -= 10
-        self.__show_image()
+    matrix_res = multiplication_matrix(matrix_mov, matrix)
+    matrix_mov[2][0], matrix_mov[2][1] = -dx, -dy
+    matrix_res = multiplication_matrix(matrix_res, matrix_mov)
 
-    def crop(self, bbox):
-        """ Crop rectangle from the image and return it """
-        if self.__huge:  # image is huge and not totally in RAM
-            band = bbox[3] - bbox[1]  # width of the tile band
-            self.__tile[1][3] = band  # set the tile height
-            self.__tile[2] = self.__offset + self.imwidth * bbox[1] * 3  # set offset of the band
-            self.__image.close()
-            self.__image = Image.open(self.path)  # reopen / reset image
-            self.__image.size = (self.imwidth, band)  # set size of the tile band
-            self.__image.tile = [self.__tile]
-            return self.__image.crop((bbox[0], 0, bbox[2], band))
-        else:  # image is totally in RAM
-            return self.__pyramid[0].crop(bbox)
+    global inverse_matrix
 
-filename = './image.png'  
-window = Tk()
-window.title("lab_02")
-window.geometry("800x600")
-window.rowconfigure(0, weight = 1)
-window.columnconfigure(0, weight = 1)
-canvas = CanvasImage(window, filename)
-canvas.grid(row = 0, column = 0)
-window.mainloop()
+    for i in range(len(list_point)):
+        list_point[i] = multiplication_vector(list_point[i], matrix_res)
+    for i in range(len(list_circle)):
+        list_circle[i] = multiplication_vector(list_circle[i], matrix_res)
+    inverse_matrix = inverse_func(matrix_res)
+
+    print_scene()
+
+
+def moving():
+    dx = entry_dx.get()
+    dy = entry_dy.get()
+
+    if (check_answer(dx) == False):
+        return
+    dx = int_answer(dx)
+    if (dx == false):
+        return
+
+    if (check_answer(dy) == False):
+        return
+    dy = int_answer(dy)
+    if (dy == false):
+        return
+
+    moving_func(dx, dy)
+
+
+def scale():
+    kx = entry_kx.get()
+    if (check_answer(kx) == False):
+        return
+    kx = float_answer(kx)
+    if (kx == false):
+        return
+
+    ky = entry_ky.get()
+    if (check_answer(ky) == False):
+        return
+    ky = float_answer(ky)
+    if (ky == false):
+        return
+
+    if kx == 0 or ky == 0:
+        print_error("При таких значениях рисунка не будет!")
+        return
+
+    xm = entry_xm.get()
+    if (check_answer(xm) == False):
+        return
+    xm = -float_answer(xm)
+    if (xm == false):
+        return
+
+    ym = entry_ym.get()
+    if (check_answer(ym) == False):
+        return
+    ym = -float_answer(ym)
+    if (ym == false):
+        return
+
+    # print("kx = ", kx, "ky = ", ky, "xm = ", xm, "ym = ", ym)
+
+    matrix = [[kx, 0, 0],
+              [0, ky, 0],
+              [0, 0, 1]]
+
+    matrix_mov = [[1, 0, 0],
+                  [0, 1, 0],
+                  [-400-xm, ym-400, 1]]
+
+    matrix_res = multiplication_matrix(matrix_mov, matrix)
+    matrix_mov[2][0], matrix_mov[2][1] = xm + 400, 400-ym
+    matrix_res = multiplication_matrix(matrix_res, matrix_mov)
+
+    global inverse_matrix
+    # inverse_matrix = inverse_func(matrix)
+    inverse_matrix = inverse_func(matrix_res)
+
+    for i in range(len(list_point)):
+        list_point[i] = multiplication_vector(list_point[i], matrix_res)
+    for i in range(len(list_circle)):
+        list_circle[i] = multiplication_vector(list_circle[i], matrix_res)
+    print_scene()
+
+
+def cancel():
+    global inverse_matrix
+    for i in range(len(list_point)):
+        list_point[i] = np.dot(list_point[i], inverse_matrix)
+    for i in range(len(list_circle)):
+        list_circle[i] = np.dot(list_circle[i], inverse_matrix)
+    inverse_matrix = [[1, 0, 0],
+                      [0, 1, 0],
+                      [0, 0, 1]]
+    print_scene()
+
+def paint_point(cordinate):
+    r = 1
+    t = 0
+    x = cordinate[0]
+    y = cordinate[1] + t
+    canv.create_oval(x - r, y - r,
+                     x + r, y + r, fill='black')
+
+
+def paint_line(a, b):
+    canv.create_line(a[0], a[1], b[0], b[1], fill="black", width=3)
+
+def paint_oval(circle, str):
+    x = circle[0][0]
+    y = circle[0][1]
+    rx = circle[1]
+    ry = circle[2]
+    canv.create_oval(x - rx, y - ry, x + rx, y + ry, fill = str, width=3)
+
+
+def print_scene():
+    canv.delete(ALL)
+    for i in range(25):
+        paint_point(list_point[i])
+        paint_line(list_point[i+1], list_point[i])
+    for i in range(25, len(list_point)):
+        paint_point(list_point[i])
+        if i < len(list_point) - 1:
+            paint_line(list_point[i+1], list_point[i])
+
+    for i in range(len(list_circle) - 1):
+        if (i + 1) % 3600 == 0:
+            continue
+        paint_line(list_circle[i], list_circle[i + 1])
+
+    canv.create_line(win_size/2, win_size, win_size/2, 0, width=2, arrow=LAST)
+    canv.create_line(0, win_size / 2, win_size,
+                     win_size / 2, width=2, arrow=LAST)
+    
+
+def add_circle(point, radius):
+    x = point[0]
+    y = point[1]
+    for i in range(0, 3600, 1):
+        list_circle.append([x + radius*cos(radians(i/10)),y + radius*sin(radians(i/10)), 1])
+
+def create_scene():
+    list_point.append([135, 523, 1])
+    list_point.append([80, 479, 1])
+    list_point.append([147, 427, 1])
+    list_point.append([295, 397, 1])
+    list_point.append([270,375, 1])
+    list_point.append([221,375, 1])
+    list_point.append([221,368, 1])
+    list_point.append([18,368, 1])
+    list_point.append([18,360, 1])
+    list_point.append([221,360, 1])
+    list_point.append([221,353, 1])
+    list_point.append([270,353, 1])
+    list_point.append([400, 309, 1])
+    list_point.append([430, 282, 1])
+    list_point.append([480, 282, 1])
+    list_point.append([499, 294, 1])
+    list_point.append([523, 294, 1])
+    list_point.append([627, 338, 1])
+    list_point.append([627, 383, 1])
+    list_point.append([529, 383, 1])
+    list_point.append([529, 395, 1])
+    list_point.append([683, 395, 1])
+    list_point.append([763, 523, 1])
+    list_point.append([615, 515, 1])
+    list_point.append([246, 515, 1])
+    list_point.append([135, 523, 1])
+    list_point.append([141, 560,1])
+    list_point.append([227, 627, 1])
+    list_point.append([646, 627, 1])
+    list_point.append([745, 550, 1])
+    list_point.append([763, 523, 1])
+
+    add_circle([240, 596], 30)
+    add_circle([329, 596], 30)
+    add_circle([428, 596], 30)
+    add_circle([527, 596], 30)
+    add_circle([635, 596], 30) 
+    add_circle([165, 544], 26)
+    add_circle([727, 529], 26)
+    add_circle([240, 596], 10)
+    add_circle([329, 596], 10)
+    add_circle([428, 596], 10)
+    add_circle([527, 596], 10)
+    add_circle([635, 596], 10) 
+    add_circle([165, 544], 8)
+    add_circle([727, 529], 8)
+
+    print_scene()
+
+
+def return_all():
+    global inverse_matrix
+    inverse_matrix = [[1, 0, 0],
+                      [0, 1, 0],
+                      [0, 0, 1]]
+    for i in range(len(list_point) - 1, -1, -1):
+        del list_point[i]
+    create_scene()
+
+if __name__ == "__main__":
+    window = Tk()
+    window.title('Лабораторная работа №2')
+    window.geometry("1200x850")
+    window.configure(bg="lavender")
+    window.columnconfigure(0, weight = 1)
+    window.columnconfigure(1, weight = 1)
+    window.rowconfigure(0, weight = 1)
+
+    main_menu = Menu(window)
+    window.configure(menu=main_menu)
+    third_item = Menu(main_menu, tearoff=0)
+    main_menu.add_cascade(label="Инфор",
+                          menu=third_item, font="Verdana 10")
+    third_item.add_command(label="О задаче",
+                           command=info_show, font="Verdana 12")
+    third_item.add_command(label="О авторе", command = lambda: show_info("Динь ВЬет Ань, ИУ7И-44Б"))
+    exit_menu = Menu(main_menu, tearoff = 0)
+    main_menu.add_command(label = "Выход", command = window.destroy)
+
+    canv = Canvas(window, width=800, height=800, bg="white")
+    canv.grid(column = 0, row = 0)
+
+    create_scene()
+
+    frame = Frame(window, bg = "lavender")
+    frame.grid(column = 1, row = 0)
+    frame.rowconfigure(0, weight = 1)
+    frame.rowconfigure(1, weight = 1)
+    frame.rowconfigure(2, weight = 1)
+    frame.rowconfigure(3, weight = 1)
+    frame.rowconfigure(4, weight = 1)
+    frame.rowconfigure(5, weight = 1)
+    frame.rowconfigure(6, weight = 1)
+    frame.rowconfigure(7, weight = 1)
+    frame.rowconfigure(8, weight = 1)
+    frame.rowconfigure(9, weight = 1)
+    frame.rowconfigure(10, weight = 1)
+    frame.rowconfigure(11, weight = 1)
+    frame.rowconfigure(12, weight = 1)
+    frame.rowconfigure(13, weight = 1)
+    frame.columnconfigure(0, weight = 1)
+    frame.columnconfigure(1, weight = 1)
+
+    button = Button(frame, text="Перенести", width=15, command=moving, bg="thistle3")
+    button.grid(columnspan = 2, row = 0, pady = 15, sticky=NSEW)
+    label = Label(frame, text="dx:", bg="lavender").grid(column= 0, row  = 1)
+    entry_dx = Entry(frame, width="30")
+    entry_dx.grid(column = 1, row = 1, pady = 15, sticky=NSEW)
+    label = Label(frame, text="dy:", bg="lavender").grid(column= 0, row  = 2)
+    entry_dy = Entry(frame, width="30")
+    entry_dy.grid(column = 1, row = 2, pady = 15, sticky=NSEW)
+
+    button = Button(frame, text="Повернуть", width=15,
+                    command=rotation,  bg="thistle3")
+    button.grid(columnspan = 2, row = 3, pady = 15, sticky=NSEW)
+    label = Label(frame, text="Угол:", bg="lavender").grid(column = 0, row = 4, pady = 15, sticky=NSEW)
+    label = Label(frame, text="Xm:", bg="lavender").grid(column= 0, row = 5, pady = 15, sticky=NSEW)
+    label = Label(frame, text="Ym:", bg="lavender").grid(column=0, row = 6, pady = 15, sticky=NSEW)
+    entry_angle = Entry(frame, width="30")
+    entry_angle.grid(column=1, row = 4, pady = 15, sticky=NSEW)
+
+    entry_angle_xm = Entry(frame, width="30")
+    entry_angle_xm.grid(column = 1, row = 5, pady = 15, sticky=NSEW)
+
+    entry_angle_ym = Entry(frame, width="30")
+    entry_angle_ym.grid(column = 1, row = 6, pady = 15, sticky=NSEW)
+
+    button = Button(frame, text="Масштабировать", width=15,
+                    command=scale,  bg="thistle3")
+    button.grid(columnspan=2, row = 7, pady = 15, sticky=NSEW)
+
+    entry_kx = Entry(frame, width="30")
+    entry_kx.grid(column= 1, row = 8, pady = 15, sticky=NSEW)
+
+    entry_ky = Entry(frame, width="30")
+    entry_ky.grid(column= 1, row = 9, pady = 15, sticky=NSEW)
+
+    entry_xm = Entry(frame, width="30")
+    entry_xm.grid(column= 1, row = 10, pady = 15, sticky=NSEW)
+
+    entry_ym = Entry(frame, width="30")
+    entry_ym.grid(column= 1, row = 11, pady = 15, sticky=NSEW)
+
+    label = Label(frame, text="kx:", bg="lavender").grid(column= 0, row = 8, pady = 15, sticky=NSEW)
+    label = Label(frame, text="ky:", bg="lavender").grid(column= 0, row = 9, pady = 15, sticky=NSEW)
+    label = Label(frame, text="Xm:", bg="lavender").grid(column= 0, row = 10, pady = 15, sticky=NSEW)
+    label = Label(frame, text="Ym:", bg="lavender").grid(column= 0, row = 11, pady = 15, sticky=NSEW)
+
+    button = Button(frame, text="Вернуть \nначальный рисунок", width=15,
+                    command=return_all, bg="thistle3")
+    button.grid(columnspan=2, row = 12, pady = 15, sticky=NSEW)
+
+    button_del_all = Button(frame, text="Шаг назад\n(Можно только 1 раз)", width=15,
+                            command=cancel, bg="thistle3")
+    button_del_all.grid(columnspan=2, row = 13, pady = 15, sticky=NSEW)
+
+    window.mainloop()
+
