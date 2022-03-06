@@ -4,6 +4,10 @@ from math import *
 from tkinter import *
 from tkinter import messagebox as mb
 
+def show_info(str):
+    mb.showinfo("Информация", str)
+    return
+
 a = 40
 b = 60
 win_size = 800
@@ -91,7 +95,7 @@ def inverse_func(matrix):
 
 def info_show():
     info = Toplevel(root)
-    info_txt = "Условия задачи: Нарисовать эпициклоид.\
+    info_txt = "Условия задачи: Нарисовать рисунок.\
 \n\nЗатем его переместить, промасштабировать и повернуть."
     label1 = Label(info, text=info_txt, font="Verdana 14")
     label1.pack()
@@ -403,10 +407,13 @@ if __name__ == "__main__":
     root.configure(menu=main_menu)
 
     third_item = Menu(main_menu, tearoff=0)
-    main_menu.add_cascade(label="Инструкция",
+    main_menu.add_cascade(label="Инфор",
                           menu=third_item, font="Verdana 10")
-    third_item.add_command(label="Показать инструкцию",
+    third_item.add_command(label="О задаче",
                            command=info_show, font="Verdana 12")
+    third_item.add_command(label="О авторе", command = lambda: show_info("Динь ВЬет Ань, ИУ7И-44Б"))
+    exit_menu = Menu(main_menu, tearoff = 0)
+    main_menu.add_command(label = "Выход", command = root.destroy)
 
     canv = Canvas(root, width=800, height=800, bg="white")
     canv.place(x=0, y=0)
@@ -472,8 +479,8 @@ if __name__ == "__main__":
                     command=return_all, bg="thistle3")
     button.place(x=1000, y=675, anchor="center")
 
-    button_del_all = Button(text="Шаг назад\n(Можно только 1 раз)", width=15,
-                            command=cancel, bg="thistle3")
-    button_del_all.place(x=1000, y=750, anchor="center")
+    quit_button = Button(text="Выход", width=15,
+                            command=root.destroy, bg="thistle3")
+    quit_button.place(x=1000, y=750, anchor="center")
 
     root.mainloop()
