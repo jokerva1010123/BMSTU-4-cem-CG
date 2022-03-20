@@ -668,12 +668,12 @@ def clean():
 
 # Окно tkinter
 win = Tk()
-win['bg'] = 'grey'
+win['bg'] = 'lavender'
 win.geometry("%dx%d" % (WIN_WIDTH, WIN_HEIGHT))
 win.title("Лабораторная работа #3")
 
 # Канвас
-canvas_win = Canvas(win, bg="#ffffff")
+canvas_win = Canvas(win, bg = "white")
 
 # Подписи функционала
 center_lbl = Label(text="Координаты отрезков", bg='pink', font="AvantGardeC 14", fg='black')
@@ -714,10 +714,10 @@ lines_step_length = Entry(font="AvantGardeC 14", bg='white', fg='black', borderw
 
 resize_canv_lbl = Label(text="Масштабирование канваса", bg='lightgrey', font="AvantGardeC 14", fg='black')
 
-x1_entry.insert(END, 200)
-y1_entry.insert(END, 200)
-x2_entry.insert(END, 700)
-y2_entry.insert(END, 220)
+x1_entry.insert(END, 0)
+y1_entry.insert(END, 0)
+x2_entry.insert(END, 200)
+y2_entry.insert(END, 200)
 color_combo.current(0)
 method_combo.current(0)
 
