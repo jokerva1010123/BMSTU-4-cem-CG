@@ -1092,7 +1092,6 @@ add_menu.add_command(label='Выход', command=exit)
 menu.add_cascade(label='Help', menu=add_menu)
 win.config(menu=menu)
 
-
 def change_option_click(event):
     global option
     if option.get() == 1:
