@@ -167,15 +167,8 @@ def bresenham_float(p1, p2, color, step_count=False):
 
         e = e + m
 
-        if step_count:
-            if not((x_buf == x and y_buf != y) or
-                    (x_buf != x and y_buf == y)):
-                steps += 1
-
         i += 1
 
-    if step_count:
-        return steps
     return dots
 
 
@@ -239,15 +232,9 @@ def bresenham_smooth(p1, p2, color, step_count=False):
 
         dots.append(dot)
 
-        if step_count:
-            if not ((x_buf == x and y_buf != y) or
-                    (x_buf != x and y_buf == y)):
-                steps += 1
 
         i += 1
 
-    if step_count:
-        return steps
     
     return dots
 
@@ -287,17 +274,7 @@ def cda_method(p1, p2, color, step_count = False):
 
         dots.append(dot)
 
-        if step_count:
-            if not((round(x + dx) == round(x) and
-                        round(y + dy) != round(y)) or
-                        (round(x + dx) != round(x) and
-                        round(y + dy) == round(y))):
-                steps += 1
-
         i += 1
-
-    if step_count:
-        return steps
     
     return dots
 
@@ -320,8 +297,6 @@ def wu(p1, p2, color, step_count=False):
 
     dots = []
 
-    steps = 0
-
     if fabs(dy) > fabs(dx):
         if dy != 0:
             m = dx / dy
@@ -340,10 +315,6 @@ def wu(p1, p2, color, step_count=False):
             dot1 = [int(x1) + 1, y_cur, choose_color(color, round(fabs(d2) * intens))]
 
             dot2 = [int(x1), y_cur, choose_color(color, round(fabs(d1) * intens))]
-
-            if step_count and y_cur < y2:
-                if int(x1) != int(x1 + m):
-                    steps += 1
 
             dots.append(dot1)
             dots.append(dot2)
@@ -369,24 +340,17 @@ def wu(p1, p2, color, step_count=False):
             dot1 = [x_cur, int(y1) + 1, choose_color(color, round(fabs(d2) * intens))]
             dot2 = [x_cur, int(y1), choose_color(color, round(fabs(d1) * intens))]
 
-            if step_count and x_cur < x2:
-                if int(y1) != int(y1 + m):
-                    steps += 1
 
             dots.append(dot1)
             dots.append(dot2)
 
             y1 += m1
 
-    if step_count:
-        return steps
     
     return dots
 
 
 def draw(dots):
-    global points, points_check, points_spectra
-    print(len(points), len(points_check), len(points_spectra))
     for index in range(0, len(dots)):
         tmp1 = to_canva(dots[index][:2])
         canvas.create_line(tmp1[0], tmp1[1], tmp1[0]+1, tmp1[1]+1, fill = dots[index][2].hex, tag = 'line', width = 2)
@@ -630,13 +594,13 @@ pls_button.grid(row = 9, columnspan = 2, padx = 10, pady = 10)
 mns_button = Button(frame, text="-", borderwidth=0, command=lambda: change_size('-'))
 mns_button.grid(row = 9, column = 2, columnspan = 2, padx = 10, pady = 10)
 
-check_button = Button(frame, text = 'Проверка с сандартным методом', command=check)
+check_button = Button(frame, text = 'Сравнить с сандартным методом', command=check)
 check_button.grid(row = 10, columnspan=4, padx = 10, pady = 10)
 
 delete_button = Button(frame, text = 'Очистить', borderwidth = 0, command = clear)
 delete_button.grid(row = 11, columnspan = 4)
 
-menubar = Menu(window)
+menubar = Menu(window)  
 info_menu = Menu(menubar, tearoff = 0)
 info_menu.add_command(label="О авторе", command = lambda: show_info("Динь ВЬет Ань, ИУ7И-44Б"))
 info_menu.add_command(label="О программе", command = lambda: show_info(task))
