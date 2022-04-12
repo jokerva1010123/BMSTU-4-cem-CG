@@ -1,5 +1,4 @@
 from tkinter import *
-from math import *
 from tkinter import ttk, colorchooser
 import tkinter.messagebox as box
 import colorutils as cu
@@ -123,7 +122,7 @@ def drawspactre():
     if step == -1:
         step = int((endrad - startx) / (cnt - 1))
     else:
-        endrad = startx + step * cnt
+        endrad = startx + step * (cnt - 1)
     for i in range(cnt):
         paint([xcenter, ycenter], method, [startx + int(i * ((endrad - startx) / (cnt - 1))), starty + int(i * ((endrad - startx) / (cnt - 1)))], type2)
 
