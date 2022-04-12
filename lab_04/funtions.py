@@ -185,7 +185,7 @@ def mid_dot_ellipse(canvas_win, dot_c, rad, color, draw):
     r_a_2 = rad[0] * rad[0]
     r_b_2 = rad[1] * rad[1]
     edge = round(rad[0] / sqrt(1 + r_b_2 / r_a_2))
-    delta = r_b_2 - round(r_a_2 * (rad[1] - 1 / 4))
+    delta = r_b_2 - r_a_2* rad[1] * 2 + r_a_2
     while x <= edge:
         if draw:
             draw_dots_ellipse(canvas_win, [x_c, y_c], [x, y], color)
