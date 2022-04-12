@@ -11,11 +11,19 @@ from bresenham_method import bresenham_circle, bresenham_ellipse
 from mid_dot_method import mid_dot_circle, mid_dot_ellipse
 from canon_method import canon_circle, canon_ellipse
 from parametric_method import parametric_circle, parametric_ellipse
-from draw import to_canva, to_coords, draw_axes, SIZE
+from draw import *
+
+WIN_WIDTH = 1200
+WIN_HEIGHT = 800
+
+NUMBER_OF_RUNS = 3
+MAX_RADIUS = 5000
+STEP = 500
+ITERATION = 3
 
 task = '''Алгоритмы построения окружностей.\n 
        Реализовать возможность построения окружностей методами Брезенхема, 
-средней точки, канонического и параметрического уравнений и сравненить времени и ступенчатости.'''
+средней точки, канонического и параметрического уравнений и сравненить времени.'''
 current_color = (0, 0, 0)
 canvas_bg = ((255, 255, 255), "#ffffff")
 
@@ -121,10 +129,45 @@ def drawspactre():
     else:
         endrad = startx + step * cnt
     for i in range(cnt):
-        paint([xcenter, ycenter], method, [startx + i * step, starty + i * step], type2)
+        paint([xcenter, ycenter], method, [startx + int(i * ((endrad - startx) / (cnt - 1))), starty + int(i * ((endrad - startx) / (cnt - 1)))], type2)
 
 def compare():
-    print(4)
+    time_mes = []
+
+    for i in range(4):
+        time_start = [0] * (MAX_RADIUS // STEP)
+        time_end = [0] * (MAX_RADIUS // STEP)
+        for _ in range(NUMBER_OF_RUNS):
+            r_a = STEP
+            r_b = STEP
+            for iter in range(ITERATION):
+                for k in range(MAX_RADIUS // STEP):
+                    time_start[k] += time.time()
+                    paint([0, 0], i, [r_a, r_b], 1, False)
+                    time_end[k] += time.time()
+                    r_a += STEP
+                    r_b += STEP
+
+        size = len(time_start)
+        res_time = list((time_end[j] / ITERATION - time_start[j] / ITERATION) / NUMBER_OF_RUNS for j in range(size))
+        time_mes.append(res_time)
+
+    rad_arr = list(i for i in range(0, MAX_RADIUS, STEP))
+
+    plt.title('Сранение методов построения окружности')
+
+    plt.plot(rad_arr, time_mes[0], label="Каноническое\nуравнеие")
+    plt.plot(rad_arr, time_mes[1], label="Параметрическое\nуравнение")
+    plt.plot(rad_arr, time_mes[2], label="Брезенхем")
+    plt.plot(rad_arr, time_mes[3], label="Алгоритм\nсредней точки")
+
+    plt.xticks(np.arange(STEP, MAX_RADIUS, STEP))
+    plt.legend()
+
+    plt.ylabel("Время")
+    plt.xlabel("Радиус")
+
+    plt.show()
 
 def clean():
     canvas.delete('pixel')
@@ -139,6 +182,19 @@ def block_spectra(event):
     if not type2_combo.current():
         starty_entry.configure(state = 'readonly')
 
+def click(event):
+    if event.x < 0 or event.x > WIN_WIDTH or event.y < 0 or event.y > WIN_HEIGHT:
+        return
+    point = to_coords([event.x, event.y])
+    x, y = event.x, event.y
+    xcenter_entry.delete(0, END)
+    ycenter_entry.delete(0, END)
+    xcenter_entry.insert(0, str(point[0]))
+    ycenter_entry.insert(0, str(point[1]))
+    canvas.delete('dot1')
+    canvas.create_oval(x - 2, y - 2, x + 2, y + 2,
+                            outline='grey', fill='pink', activeoutline='lightgreen', width=2, tag='dot1')
+
 window = Tk()
 window['bg'] = 'lavender'
 window.title('Lab_04')
@@ -152,6 +208,10 @@ canvas = Canvas(window, bg = 'white', width = 800, height = 800)
 canvas.grid(row = 0, column = 1, padx = 10, pady = 10)
 canvas.create_line(0, 400, 800, 400, tag = 'ox', arrow = 'last')
 canvas.create_line(400, 0, 400, 800, tag = 'oy', arrow = 'first')
+canvas.create_text(780, 380, text='X', font="AvantGardeC 14", fill='grey')
+canvas.create_text(420, 20, text='Y', font="AvantGardeC 14", fill='grey')
+
+canvas.bind('<1>', click)
 
 frame = Frame(window, bg = 'lavender', width = 300, height = 800)
 frame.grid(row = 0, column = 0)
@@ -178,8 +238,8 @@ frame.rowconfigure(17, weight = 1)
 
 metog_label = Label(frame, text = 'Алгоритм', bg = 'lavender')
 metog_label.grid(padx = 5, pady = 10, row = 0, column = 0)
-method_combo = ttk.Combobox(frame, state='readonly', width = 26, values=["Каноническое уравнение", "Параметрическое уравнение",
-                                                           "Алгоритм Брезенхема", "Алгоритм средней точки"])
+all_method = ["Каноническое уравнение", "Параметрическое уравнение", "Алгоритм Брезенхема", "Алгоритм средней точки"]
+method_combo = ttk.Combobox(frame, state='readonly', width = 26,  values=all_method)
 method_combo.current(0)
 method_combo.grid(padx = 5, pady = 10, row = 0, column = 1)
 
@@ -210,7 +270,7 @@ radiusy_label.grid(padx = 5, pady = 10, row = 6, column = 0)
 radiusy_entry = Entry(frame, justify = 'center')
 radiusy_entry.grid(padx = 5, pady = 10, row = 6, column = 1)
 radiusx_entry.insert(END, 50)
-radiusy_entry.insert(END, 50)
+radiusy_entry.insert(END, 100)
 
 draw_button = Button(frame, text = "Построить", command = draw)
 draw_button.grid(padx = 5, pady = 10, row = 7, columnspan = 2)
@@ -237,7 +297,7 @@ starty_label.grid(padx = 5, pady = 10, row = 12, column = 0)
 starty_entry = Entry(frame, justify = 'center')
 starty_entry.grid(padx = 5, pady = 10, row = 12, column = 1)
 startx_entry.insert(END, 50)
-starty_entry.insert(END, 50)
+starty_entry.insert(END, 100)
 
 spectra_combo = ttk.Combobox(frame, state='readonly', width = 20, values=["Шаг", "Конечный радиус Х"], justify = 'center')
 spectra_combo.grid(padx = 5, pady = 10, row = 13, column = 0)

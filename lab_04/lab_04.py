@@ -10,7 +10,7 @@ from bresenham_method import bresenham_circle, bresenham_ellipse
 from mid_dot_method import mid_dot_circle, mid_dot_ellipse
 from canon_method import canon_circle, canon_ellipse
 from parametric_method import parametric_circle, parametric_ellipse
-from draw import to_canva, to_coords, draw_axes, SIZE, undo
+from draw import to_canva, to_coords, draw_axes, SIZE
 
 WIN_WIDTH = 1200
 WIN_HEIGHT = 800
@@ -471,8 +471,6 @@ con = Button(text="Условие задачи", font="AvantGardeC 14",
              borderwidth=0, command=lambda: messagebox.showinfo("Задание", TASK + AUTHOR))
 bgn = Button(text="Сброс", font="AvantGardeC 14",
              borderwidth=0, command=lambda: clean_canvas())
-und = Button(text="↩", font="AvantGardeC 14",
-             borderwidth=0, command=lambda: undo(canvas_win, figure_history))
 spc = Button(text="Построить спектр", font="AvantGardeC 14",
              borderwidth=0, command=lambda: parse_spectra(method_combo.current(),
                                                                  option_spectra.get(), option.get()))

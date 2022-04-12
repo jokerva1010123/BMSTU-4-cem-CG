@@ -1,6 +1,5 @@
 from math import sqrt
-from draw import draw_pixel, draw_dots_circle, draw_dots_ellipse
-
+from draw import draw_dots_circle, draw_dots_ellipse
 
 def canon_circle(canva, center, radius, color, draw):
     x_c = center[0]
