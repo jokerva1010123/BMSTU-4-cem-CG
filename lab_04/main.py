@@ -7,11 +7,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import time
 
-from bresenham_method import bresenham_circle, bresenham_ellipse
-from mid_dot_method import mid_dot_circle, mid_dot_ellipse
-from canon_method import canon_circle, canon_ellipse
-from parametric_method import parametric_circle, parametric_ellipse
-from draw import *
+from funtions import *
 
 WIN_WIDTH = 1200
 WIN_HEIGHT = 800
