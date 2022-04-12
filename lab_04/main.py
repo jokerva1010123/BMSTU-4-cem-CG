@@ -7,6 +7,12 @@ import matplotlib.pyplot as plt
 import numpy as np
 import time
 
+from bresenham_method import bresenham_circle, bresenham_ellipse
+from mid_dot_method import mid_dot_circle, mid_dot_ellipse
+from canon_method import canon_circle, canon_ellipse
+from parametric_method import parametric_circle, parametric_ellipse
+from draw import to_canva, to_coords, draw_axes, SIZE
+
 task = '''Алгоритмы построения окружностей.\n 
        Реализовать возможность построения окружностей методами Брезенхема, 
 средней точки, канонического и параметрического уравнений и сравненить времени и ступенчатости.'''
@@ -30,8 +36,34 @@ def choose_line_color():
     global current_color
     current_color = colorchooser.askcolor()
 
-def paint(center, method, radius, type):
-    pass
+def paint(center, method, radius, type_draw, draw = True):
+    color = cu.Color(current_color[0])
+
+    if method == 0:  # canon
+        if type_draw == 1:
+            canon_ellipse(canvas, center, radius, color, draw)
+        else:
+            canon_circle(canvas, center, radius[0], color, draw)
+
+    elif method == 1:  # param
+        if type_draw == 0:
+            parametric_circle(canvas, center, radius[0], color, draw)
+        else:
+            parametric_ellipse(canvas, center, radius, color, draw)
+
+    elif method == 2:  # bres
+        if type_draw == 0:
+            bresenham_circle(canvas, center, radius[0], color, draw)
+        else:
+            bresenham_ellipse(canvas, center, radius, color, draw)
+
+    elif method == 3:  # mid point
+        if type_draw == 0:
+            mid_dot_circle(canvas, center, radius[0], color, draw)
+        else:
+            mid_dot_ellipse(canvas, center, radius, color, draw)
+    else:
+        show_error("Неизвестный алгоритм")
 
 def draw():
     clean()
@@ -44,7 +76,10 @@ def draw():
         rad_x = int(radiusx_entry.get())
         rad_y = int(radiusy_entry.get()) if type1 else rad_x
     except:
-        show_error("Error")
+        show_error("Ввод не правило")
+        return
+    if rad_x < 0 or rad_y < 0:
+        show_error("Радиус не отрицательный")
         return
     paint([xcenter, ycenter], method, [rad_x, rad_y], type1)
 
@@ -52,20 +87,47 @@ def drawspactre():
     clean()
     type2 = type2_combo.current()
     method = method_combo.current()
+    starty = 0
+    step = -1
+    endrad = -1
+    cnt = -1
     try:
         xcenter = int(xcenter_entry.get())
         ycenter = int(ycenter_entry.get())
         startx = int(startx_entry.get())
-        starty = int(starty_entry.get())
+        starty = startx if not type2 else int(starty_entry.get())
+        if spectra_combo.current() == 0:
+            step = int(spectra_entry.get())
+        else:
+            endrad = int(spectra_entry.get())
+        cnt = int(number_entry.get())
     except:
-        show_error("Error")
+        show_error("Ввод не правило")
         return
+    if startx < 0 or starty < 0:
+        show_error("Начальный радиус не отрицательный")
+        return
+    if 0 < endrad < startx and spectra_combo.current() == 1:
+        show_error('Начальный радиус не может быть больше конечного')
+        return 
+    if 0 > step and spectra_combo.current() == 0:
+        show_error('Шаг радиуса должен быть выше нуля')
+        return 
+    if 0 >= cnt:
+        show_error('Количество должно быть больше нуля')
+        return 
+    if step == -1:
+        step = int((endrad - startx) / (cnt - 1))
+    else:
+        endrad = startx + step * cnt
+    for i in range(cnt):
+        paint([xcenter, ycenter], method, [startx + i * step, starty + i * step], type2)
 
 def compare():
     print(4)
 
 def clean():
-    canvas.delete('line')
+    canvas.delete('pixel')
 
 def block_figure(event):
     radiusy_entry.configure(state = 'normal')

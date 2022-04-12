@@ -45,41 +45,39 @@ def to_canva(dot):
 
     return [x, y]
 
-
-def draw_pixel(canvas_win, dot, step_history):
+def draw_pixel(canvas_win, dot):
     x, y = dot[0], dot[1]
     canvas_win.create_polygon([x, y], [x, y + 1],
                    [x + 1, y + 1], [x + 1, y],
                    fill=dot[2].hex, tag='pixel')
-    step_history.append(dot)
 
 
-def draw_dots_circle(canvas_win, center, dot_dif, color, step_history):
+def draw_dots_circle(canvas_win, center, dot_dif, color):
     x_c, y_c = to_canva([center[0], center[1]])
     x = dot_dif[0]
     y = dot_dif[1]
 
-    draw_pixel(canvas_win, [x_c + x, y_c + y, color], step_history)
-    draw_pixel(canvas_win, [x_c - x, y_c + y, color], step_history)
-    draw_pixel(canvas_win, [x_c + x, y_c - y, color], step_history)
-    draw_pixel(canvas_win, [x_c - x, y_c - y, color], step_history)
+    draw_pixel(canvas_win, [x_c + x, y_c + y, color])
+    draw_pixel(canvas_win, [x_c - x, y_c + y, color])
+    draw_pixel(canvas_win, [x_c + x, y_c - y, color])
+    draw_pixel(canvas_win, [x_c - x, y_c - y, color])
 
-    draw_pixel(canvas_win, [x_c + y, y_c + x, color], step_history)
-    draw_pixel(canvas_win, [x_c - y, y_c + x, color], step_history)
-    draw_pixel(canvas_win, [x_c + y, y_c - x, color], step_history)
-    draw_pixel(canvas_win, [x_c - y, y_c - x, color], step_history)
+    draw_pixel(canvas_win, [x_c + y, y_c + x, color])
+    draw_pixel(canvas_win, [x_c - y, y_c + x, color])
+    draw_pixel(canvas_win, [x_c + y, y_c - x, color])
+    draw_pixel(canvas_win, [x_c - y, y_c - x, color])
 
 
-def draw_dots_ellipse(canvas_win, center, dot_dif, color, step_history):
+def draw_dots_ellipse(canvas_win, center, dot_dif, color):
     x_c, y_c = to_canva([center[0], center[1]])
 
     x = dot_dif[0]
     y = dot_dif[1]
 
-    draw_pixel(canvas_win, [x_c + x, y_c + y, color], step_history)
-    draw_pixel(canvas_win, [x_c - x, y_c + y, color], step_history)
-    draw_pixel(canvas_win, [x_c + x, y_c - y, color], step_history)
-    draw_pixel(canvas_win, [x_c - x, y_c - y, color], step_history)
+    draw_pixel(canvas_win, [x_c + x, y_c + y, color])
+    draw_pixel(canvas_win, [x_c - x, y_c + y, color])
+    draw_pixel(canvas_win, [x_c + x, y_c - y, color])
+    draw_pixel(canvas_win, [x_c - x, y_c - y, color])
 
 
 # отрисовать отрезов без сохранения в историю
@@ -99,14 +97,3 @@ def draw_all_figures(canvas_win, array_dots):
         else:
             draw_all_figures(canvas_win, dots)
 
-
-# откат
-def undo(canvas_win, figure_history):
-    if len(figure_history) == 0:
-        messagebox.showerror("Внимание", "Достигнуто исходное состояние")
-        return
-
-    canvas_win.delete('pixel')
-
-    figure_history.pop()
-    draw_all_figures(canvas_win, figure_history)

@@ -1,7 +1,7 @@
 from math import sqrt
 from draw import draw_dots_circle, draw_dots_ellipse
 
-def mid_dot_circle(canvas_win, dot_c, radius, color, history, draw):
+def mid_dot_circle(canvas_win, dot_c, radius, color, draw):
     x_c = dot_c[0]
     y_c = dot_c[1]
 
@@ -10,11 +10,9 @@ def mid_dot_circle(canvas_win, dot_c, radius, color, history, draw):
 
     delta = 1 - radius
 
-    step_history = []
-    step_history.clear()
     while x <= y:
         if draw:
-            draw_dots_circle(canvas_win, [x_c, y_c], [x, y], color, step_history)
+            draw_dots_circle(canvas_win, [x_c, y_c], [x, y], color)
 
         x += 1
 
@@ -23,10 +21,9 @@ def mid_dot_circle(canvas_win, dot_c, radius, color, history, draw):
         else:
             y -= 1
             delta = delta + 2 * (x - y) + 1
-    history.append(step_history)
 
 
-def mid_dot_ellipse(canvas_win, dot_c, rad, color, history, draw):
+def mid_dot_ellipse(canvas_win, dot_c, rad, color, draw):
 
     x_c = dot_c[0]
     y_c = dot_c[1]
@@ -41,11 +38,9 @@ def mid_dot_ellipse(canvas_win, dot_c, rad, color, history, draw):
 
     delta = r_b_2 - round(r_a_2 * (rad[1] - 1 / 4))
 
-    step_history = []
-    step_history.clear()
     while x <= edge:
         if draw:
-            draw_dots_ellipse(canvas_win, [x_c, y_c], [x, y], color, step_history)
+            draw_dots_ellipse(canvas_win, [x_c, y_c], [x, y], color)
 
         if delta > 0:
             y -= 1
@@ -67,7 +62,7 @@ def mid_dot_ellipse(canvas_win, dot_c, rad, color, history, draw):
 
     while y <= edge:
         if draw:
-            draw_dots_ellipse(canvas_win, [x_c, y_c], [x, y], color, step_history)
+            draw_dots_ellipse(canvas_win, [x_c, y_c], [x, y], color)
 
         if delta > 0:
             x -= 1
@@ -77,4 +72,3 @@ def mid_dot_ellipse(canvas_win, dot_c, rad, color, history, draw):
 
         delta = delta + r_a_2 * (2 * y + 1)
 
-    history.append(step_history)
