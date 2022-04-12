@@ -1,7 +1,7 @@
-from tkinter import ttk, colorchooser
-import tkinter.messagebox as box
 from tkinter import *
 from math import *
+from tkinter import ttk, colorchooser
+import tkinter.messagebox as box
 import colorutils as cu
 import matplotlib.pyplot as plt
 import numpy as np
