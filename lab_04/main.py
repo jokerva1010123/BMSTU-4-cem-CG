@@ -11,10 +11,9 @@ from funtions import *
 WIN_WIDTH = 1200
 WIN_HEIGHT = 800
 
-NUMBER_OF_RUNS = 3
+NUMBER_OF_RUNS = 5
 MAX_RADIUS = 5000
 STEP = 500
-ITERATION = 3
 
 task = '''Алгоритмы построения окружностей.\n 
        Реализовать возможность построения окружностей методами Брезенхема, 
@@ -135,16 +134,15 @@ def compare():
         for _ in range(NUMBER_OF_RUNS):
             r_a = STEP
             r_b = STEP
-            for iter in range(ITERATION):
-                for k in range(MAX_RADIUS // STEP):
-                    time_start[k] += time.time()
-                    paint([0, 0], i, [r_a, r_b], 1, False)
-                    time_end[k] += time.time()
-                    r_a += STEP
-                    r_b += STEP
+            for k in range(MAX_RADIUS // STEP):
+                time_start[k] += time.time()
+                paint([0, 0], i, [r_a, r_b], 1, False)
+                time_end[k] += time.time()
+                r_a += STEP
+                r_b += STEP
 
         size = len(time_start)
-        res_time = list((time_end[j] / ITERATION - time_start[j] / ITERATION) / NUMBER_OF_RUNS for j in range(size))
+        res_time = list((time_end[j] - time_start[j]) / NUMBER_OF_RUNS for j in range(size))
         time_mes.append(res_time)
 
     rad_arr = list(i for i in range(0, MAX_RADIUS, STEP))
