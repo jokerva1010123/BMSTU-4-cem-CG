@@ -41,25 +41,25 @@ def choose_line_color():
 def paint(center, method, radius, type_draw, draw = True):
     color = cu.Color(current_color[0])
 
-    if method == 0:  # canon
+    if method == 0: 
         if type_draw == 1:
             canon_ellipse(canvas, center, radius, color, draw)
         else:
             canon_circle(canvas, center, radius[0], color, draw)
 
-    elif method == 1:  # param
+    elif method == 1: 
         if type_draw == 0:
             parametric_circle(canvas, center, radius[0], color, draw)
         else:
             parametric_ellipse(canvas, center, radius, color, draw)
 
-    elif method == 2:  # bres
+    elif method == 2:
         if type_draw == 0:
             bresenham_circle(canvas, center, radius[0], color, draw)
         else:
             bresenham_ellipse(canvas, center, radius, color, draw)
 
-    elif method == 3:  # mid point
+    elif method == 3: 
         if type_draw == 0:
             mid_dot_circle(canvas, center, radius[0], color, draw)
         else:
@@ -83,6 +83,8 @@ def draw():
     if rad_x < 0 or rad_y < 0:
         show_error("Радиус не отрицательный")
         return
+    x, y = to_canva([xcenter, ycenter])
+    canvas.create_oval(x - 2, y - 2, x + 2, y + 2, fill ='grey', width=2, tag='pixel')
     paint([xcenter, ycenter], method, [rad_x, rad_y], type1)
 
 def drawspactre():
@@ -109,7 +111,7 @@ def drawspactre():
     if startx < 0 or starty < 0:
         show_error("Начальный радиус не отрицательный")
         return
-    if 0 < endrad < startx and spectra_combo.current() == 1:
+    if endrad < startx and spectra_combo.current() == 1:
         show_error('Начальный радиус не может быть больше конечного')
         return 
     if 0 > step and spectra_combo.current() == 0:
@@ -119,11 +121,13 @@ def drawspactre():
         show_error('Количество должно быть больше нуля')
         return 
     if step == -1:
-        step = int((endrad - startx) / (cnt - 1))
+        step = int((endrad - startx) / (cnt - 1)) if cnt > 1 else int((endrad - startx) / cnt)
     else:
         endrad = startx + step * (cnt - 1)
+    x, y = to_canva([xcenter, ycenter])
+    canvas.create_oval(x - 2, y - 2, x + 2, y + 2, fill ='grey', width=2, tag='pixel')
     for i in range(cnt):
-        paint([xcenter, ycenter], method, [startx + int(i * ((endrad - startx) / (cnt - 1))), starty + int(i * ((endrad - startx) / (cnt - 1)))], type2)
+        paint([xcenter, ycenter], method, [startx + i * step, starty + i * step], type2)
 
 def compare():
     time_mes = []
@@ -164,6 +168,7 @@ def compare():
 
 def clean():
     canvas.delete('pixel')
+    canvas.delete('dot1')
 
 def block_figure(event):
     radiusy_entry.configure(state = 'normal')
@@ -185,8 +190,7 @@ def click(event):
     xcenter_entry.insert(0, str(point[0]))
     ycenter_entry.insert(0, str(point[1]))
     canvas.delete('dot1')
-    canvas.create_oval(x - 2, y - 2, x + 2, y + 2,
-                            outline='grey', fill='pink', activeoutline='lightgreen', width=2, tag='dot1')
+    canvas.create_oval(x - 2, y - 2, x + 2, y + 2, fill ='grey', width=2, tag='dot1')
 
 window = Tk()
 window['bg'] = 'lavender'
@@ -306,7 +310,7 @@ clr.grid(padx = 5, pady = 10, row = 15, column = 0)
 bgc = Button(frame, text="Цвет фона", command=lambda: change_bg_color())
 bgc.grid(padx = 5, pady = 10, row = 15, column = 1)
 
-compare_button = Button(frame, text = 'Сранение', command = compare)
+compare_button = Button(frame, text = 'Сранение времени', command = compare)
 compare_button.grid(padx = 5, pady = 10, row = 16, columnspan = 2)
 clean_button = Button(frame, text = 'Очистить', command = clean)
 clean_button.grid(padx = 5, pady = 10, row = 17, columnspan = 2)

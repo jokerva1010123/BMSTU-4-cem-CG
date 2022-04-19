@@ -45,20 +45,16 @@ def draw_dots_ellipse(canvas_win, center, dot_dif, color):
     draw_pixel(canvas_win, [x_c - x, y_c - y, color])
 
 def canon_circle(canva, center, radius, color, draw):
-    x_c = center[0]
-    y_c = center[1]
     edge = round(radius / sqrt(2))
     double_radius = radius * radius
     x = 0
     while x <= edge:
         y = round(sqrt(double_radius - x * x))
         if draw:
-            draw_dots_circle(canva, [x_c, y_c], [x, y], color)
+            draw_dots_circle(canva, center, [x, y], color)
         x += 1
 
 def canon_ellipse(canva, center, radius, color, draw):
-    x_c = center[0]
-    y_c = center[1]
     r_a = radius[0]
     r_b = radius[1]
     double_ra = r_a * r_a
@@ -68,14 +64,14 @@ def canon_ellipse(canva, center, radius, color, draw):
     while x <= edge:
         y = round(sqrt(1 - x * x / double_ra) * r_b)
         if draw:
-            draw_dots_ellipse(canva, [x_c, y_c], [x, y], color)
+            draw_dots_ellipse(canva, center, [x, y], color)
         x += 1
     edge = round(double_rb / sqrt(double_ra + double_rb))
     y = 0
     while y <= edge:
         x = round(sqrt(1 - y * y / double_rb) * r_a)
         if draw:   
-            draw_dots_ellipse(canva, [x_c, y_c], [x, y], color)
+            draw_dots_ellipse(canva, center, [x, y], color)
         y += 1
 
 def parametric_circle(canvas_win, dot_c, radius, color, draw):
@@ -112,6 +108,7 @@ def bresenham_circle(canvas_win, dot_c, radius, color, draw):
     y = radius
     delta_i = 2 * (1 - radius)
     eps = 0
+    param = 1
     while x <= y:
         if draw:
             draw_dots_circle(canvas_win, [x_c, y_c], [x, y], color)
@@ -141,6 +138,7 @@ def bresenham_ellipse(canvas_win, dot_c, rad, color, draw):
     r_b_2 = rad[1] * rad[1]
     delta_i = r_b_2 - r_a_2 * (2 * y + 1)
     eps = 0
+    param = 1
     while y >= 0:
         if draw:
             draw_dots_ellipse(canvas_win, [x_c, y_c], [x, y], color)
