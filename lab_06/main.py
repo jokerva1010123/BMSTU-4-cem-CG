@@ -182,7 +182,7 @@ def add_seed_dot():
         show_error("Неверно введены координаты точки")
         return
 
-    seed_dot = [x, y]
+    seed_dot = [int(x), int(y)]
 
 def get_fill_check_color(collor_fill):
     return (int(collor_fill[1:3], 16), int(collor_fill[3:5], 16), int(collor_fill[5:7], 16))
@@ -192,15 +192,34 @@ def fill_with_seed(dot_seed, color_fill, delay = False):
     color_fill_check = get_fill_check_color(color_fill)
     stack = list()
     stack.append(dot_seed)
+    x = dot_seed[0]
+    y = dot_seed[1]
+
+    out = False if (x < 800 and x > 0 and y < 800 and y > 0) else True
+    while (out == False and image_canvas.get(x, y) != COLOR_LINE_CHECK 
+        and image_canvas.get(x, y) != color_fill_check):
+        x = x + 1
+        if x >= 800:
+            out = True
+    x = dot_seed[0]
+    while (out == False and image_canvas.get(x, y) != COLOR_LINE_CHECK 
+        and image_canvas.get(x, y) != color_fill_check):
+        x = x - 1
+        if x <= 0:
+            out = True
+    if out == True:
+        show_error('Вырерите другой затравочный пиксель')
+        return
+
     while (stack):
         dot_seed = stack.pop()
-
         x = dot_seed[0]
         y = dot_seed[1]
-        
-        image_canvas.put(color_fill, (x, y))
+
         tmp_x = x
         tmp_y = y
+        
+        image_canvas.put(color_fill, (x, y))
         # Заполнение текущей строки право до ребра или уже закрашенного пикселя
         x = x + 1
 
