@@ -24,6 +24,11 @@ COLOR_LINE_CHECK = (0, 0, 2)
 
 FILL_COLOR = "#ff6e41"
 
+task = '''Программа, организующая заполнение ограниченной 
+замкнутой области через затравочный пиксель\n 
+Левая кнопка мыши:  установить вершину многоугольника\n
+Правая кнопка мыши:  установить затравочный пиксель'''
+
 dots = [[]]
 seed_dot = []
 
@@ -210,7 +215,7 @@ def fill_with_seed(dot_seed, color_fill, delay = False):
     if out == True:
         show_error('Вырерите другой затравочный пиксель')
         return
-
+    start = time()
     while (stack):
         dot_seed = stack.pop()
         x = dot_seed[0]
@@ -314,6 +319,9 @@ def fill_with_seed(dot_seed, color_fill, delay = False):
         if (delay):
             sleep(0.001)
             canvas.update()
+    end = time()
+
+    show_info("Время: " + str(round(end - start, 3)))
 
 def reboot_prog():
     global dots
