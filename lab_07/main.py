@@ -238,7 +238,7 @@ def reboot_prog():
 
 window = Tk()
 window['bg'] = 'lavender'
-window.title('Lab_04')
+window.title('Lab_07')
 window.geometry('1250x850')
 window.minsize(1250, 850)
 window.columnconfigure(0, weight = 1)
