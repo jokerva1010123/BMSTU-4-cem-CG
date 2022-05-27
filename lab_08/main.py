@@ -15,7 +15,7 @@ Y_MAX = 3
 X_DOT = 0
 Y_DOT = 1
 
-task = ''''''
+task = '''Отсечение отрезка произвольным выпуклым отсекателем'''
 
 color_rec = ((255, 0, 0), 0)
 color_line = ((0, 255, 0), 0)
@@ -124,7 +124,6 @@ def read_line():
     
     canvas.create_line(x1, y1, x2, y2, fill = cu.Color(color_line[0]).hex)
 
-
 def is_maked():
     maked = False
     if (len(cutter) > 3):
@@ -134,7 +133,7 @@ def is_maked():
     return maked
 
 def add_dot(x, y, last = True):
-    if (is_maked()): # для задания нового отсекателя
+    if (is_maked()):
         cutter.clear()
         canvas.delete("all")
         draw_lines()
@@ -168,27 +167,22 @@ def draw_lines():
             color_line = line[2]
             canvas.create_line(x1, y1, x2, y2, fill = cu.Color(color_line[0]).hex)
 
-def reboot_prog():
+def clear_screen():
     global lines
     global cutter
-
-    canvas.delete("all")
-
     lines = [[]]
     cutter = []
     dotslist_box.delete(0, END)
+    canvas.delete("all")
 
 def get_vector(dot1, dot2):
     return [dot2[X_DOT] - dot1[X_DOT], dot2[Y_DOT] - dot1[Y_DOT]]
 
-
 def vector_mul(vec1, vec2):
     return (vec1[0] * vec2[1] - vec1[1] * vec2[0])
 
-
 def scalar_mul(vec1, vec2):
     return (vec1[0] * vec2[0] + vec1[1] * vec2[1])
-
 
 def line_koefs(x1, y1, x2, y2):
     a = y1 - y2
@@ -197,48 +191,40 @@ def line_koefs(x1, y1, x2, y2):
 
     return a, b, c
 
-
 def solve_lines_intersection(a1, b1, c1, a2, b2, c2):
     opr = a1*b2 - a2*b1
     opr1 = (-c1)*b2 - b1*(-c2)
     opr2 = a1*(-c2) - (-c1)*a2
 
     if (opr == 0):
-        return -5, -5 # прямые параллельны
+        return -5, -5 
 
     x = opr1 / opr
     y = opr2 / opr
 
     return x, y
 
-
 def is_coord_between(left_coord, right_coord, dot_coord):
     return (min(left_coord, right_coord) <= dot_coord) \
             and (max(left_coord, right_coord) >= dot_coord)
-
 
 def is_dot_between(dot_left, dot_right, dot_intersec):
     return is_coord_between(dot_left[X_DOT], dot_right[X_DOT], dot_intersec[X_DOT]) \
             and is_coord_between(dot_left[Y_DOT], dot_right[Y_DOT], dot_intersec[Y_DOT])
 
-
 def are_connected_sides(line1, line2):
-
     if ((line1[0][X_DOT] == line2[0][X_DOT]) and (line1[0][Y_DOT] == line2[0][Y_DOT])) \
             or ((line1[1][X_DOT] == line2[1][X_DOT]) and (line1[1][Y_DOT] == line2[1][Y_DOT])) \
             or ((line1[0][X_DOT] == line2[1][X_DOT]) and (line1[0][Y_DOT] == line2[1][Y_DOT])) \
             or ((line1[1][X_DOT] == line2[0][X_DOT]) and (line1[1][Y_DOT] == line2[0][Y_DOT])):
         return True
-
     return False
 
-
-
-def extra_check(): # чтобы не было пересечений 
+def extra_check(): 
     cutter_lines = []
     for i in range(len(cutter) - 1):
-        cutter_lines.append([cutter[i], cutter[i + 1]]) # разбиваю отсекатель на линии
-    combs_lines = list(combinations(cutter_lines, 2)) # все возможные комбинации сторон
+        cutter_lines.append([cutter[i], cutter[i + 1]]) 
+    combs_lines = list(combinations(cutter_lines, 2)) 
     for i in range(len(combs_lines)):
         line1 = combs_lines[i][0]
         line2 = combs_lines[i][1]
@@ -255,34 +241,24 @@ def extra_check(): # чтобы не было пересечений
 def check_polygon(): 
     if (len(cutter) < 3):
         return False
-    sign = 0
-    if (vector_mul(get_vector(cutter[1], cutter[2]), get_vector(cutter[0], cutter[1])) > 0):
-        sign = 1
-    else:
-        sign = -1
+    sign = 1 if (vector_mul(get_vector(cutter[1], cutter[2]), get_vector(cutter[0], cutter[1])) > 0) else - 1
     for i in range(3, len(cutter)):
         if sign * vector_mul(get_vector(cutter[i - 1], cutter[i]), get_vector(cutter[i - 2], cutter[i - 1])) < 0:
             return False
-    check = extra_check()
-    if (check):
+    if (extra_check()):
         return False
     return True
-
 
 def get_normal(dot1, dot2, pos):
     f_vect = get_vector(dot1, dot2)
     pos_vect = get_vector(dot2, pos)
 
-    if (f_vect[1]):
-        normal = [1, -f_vect[0] / f_vect[1]]
-    else:
-        normal = [0, 1]
+    normal = [1, -f_vect[0] / f_vect[1]] if (f_vect[1]) else [0, 1]
 
     if (scalar_mul(pos_vect, normal) < 0):
         normal[0] = -normal[0]
         normal[1] = -normal[1]
     return normal
-
 
 def cyrus_beck_algorithm(line, count):
     dot1 = line[0]
@@ -303,21 +279,18 @@ def cyrus_beck_algorithm(line, count):
         if (d_scalar == 0):
             if (w_scalar < 0):
                 return
-            else:
-                continue
+            continue
 
         t = -w_scalar / d_scalar
 
         if (d_scalar > 0):
-            if (t <= 1):
-                t_bottom = max(t_bottom, t)
-            else:
+            if (t > 1):
                 return
+            t_bottom = max(t_bottom, t)
         elif (d_scalar < 0):
-            if (t >= 0):
-                t_top = min(t_top, t)
-            else:
+            if (t < 0):
                 return
+            t_top = min(t_top, t)
 
         if (t_bottom > t_top):
             break
@@ -399,40 +372,39 @@ frame.rowconfigure(13, weight = 1)
 frame.rowconfigure(14, weight = 1)
 frame.rowconfigure(15, weight = 1)
 
-add_dot_text = Label(frame, text = "Добавить точку отсекателя", bg = 'lavender')
-add_dot_text.grid(row = 0, columnspan = 2, padx = 10, pady = 10)
+add_dot_label = Label(frame, text = "Добавить точку отсекателя", bg = 'lavender')
+add_dot_label.grid(row = 0, columnspan = 2, padx = 10, pady = 10)
 
-x_text = Label(frame, text = "x: ", bg = 'lavender')
-x_text.grid(row = 1, column = 0, padx = 10, pady = 10)
+x_text_label = Label(frame, text = "x: ", bg = 'lavender')
+x_text_label.grid(row = 1, column = 0, padx = 10, pady = 10)
 
 x_entry = Entry(frame)
 x_entry.grid(row = 1, column = 1, padx = 10, pady = 10)
 
-y_text = Label(frame, text = "y: ", bg = 'lavender')
-y_text.grid(row = 2, column = 0, padx = 10, pady = 10)
+y_text_label = Label(frame, text = "y: ", bg = 'lavender')
+y_text_label.grid(row = 2, column = 0, padx = 10, pady = 10)
 
 y_entry = Entry(frame)
 y_entry.grid(row = 2, column = 1, padx = 10, pady = 10)
 
-dots_list_text = Label(frame, text = "Список точек")
-dots_list_text.grid(row = 3, columnspan = 2, padx = 10, pady = 10)
+dots_list_label = Label(frame, text = "Список точек")
+dots_list_label.grid(row = 3, columnspan = 2, padx = 10, pady = 10)
 
 dotslist_box = Listbox(frame, bg = "white")
 dotslist_box.configure(height = 10, width = 30)
 dotslist_box.grid(row = 4, columnspan = 2, padx = 10, pady = 10)
 
-add_dot_btn = Button(frame, text = "Добавить точку", command = lambda: read_dot())
-add_dot_btn.grid(row = 5, column = 0, padx = 10, pady = 10)
+adddot_button = Button(frame, text = "Добавить точку", command = lambda: read_dot())
+adddot_button.grid(row = 5, column = 0, padx = 10, pady = 10)
 
-del_dot_btn = Button(frame, text = "Удалить крайнюю", command = lambda: del_dot())
-del_dot_btn.grid(row = 5, column = 1, padx = 10, pady = 10)
+deldot_button = Button(frame, text = "Удалить крайнюю", command = lambda: del_dot())
+deldot_button.grid(row = 5, column = 1, padx = 10, pady = 10)
 
-make_figure_btn = Button(frame, text = "Замкнуть отсекатель", command = lambda: make_figure())
-make_figure_btn.grid(row = 6, columnspan = 2, padx = 10, pady = 10)
+make_figure_button = Button(frame, text = "Замкнуть отсекатель", command = lambda: make_figure())
+make_figure_button.grid(row = 6, columnspan = 2, padx = 10, pady = 10)
 
 cutter_text = Label(frame, text = "Добавить отрезок", bg = 'lavender')
 cutter_text.grid(row = 7, columnspan = 2, padx = 10, pady = 10)
-
 
 x_start_line_text = Label(frame, text = "Начало x: ", bg = 'lavender')
 x_start_line_text.grid(row = 8, column = 0, padx = 10, pady = 10)
@@ -472,7 +444,7 @@ changecolor_result.grid(row = 14, columnspan = 2, padx = 10, pady = 10)
 cut_btn = Button(frame, text = "Отсечь", command = lambda: cut_area())
 cut_btn.grid(row = 15, column = 0, padx = 10, pady = 10)
 
-clear_btn = Button(frame, text = "Очистить экран", command = lambda: reboot_prog())
+clear_btn = Button(frame, text = "Очистить экран", command = lambda: clear_screen())
 clear_btn.grid(row = 15, column = 1, padx = 10, pady = 10)
 
 menubar = Menu(window) 
